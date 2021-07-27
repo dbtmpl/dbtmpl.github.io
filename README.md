@@ -6,7 +6,7 @@ aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi 
 aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint
 occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
 
-You can find my [CV here](https://github.com/dbtmpl/Curriculum-Vitae).
+You can find my CV [here](https://github.com/dbtmpl/Curriculum-Vitae).
 
 ## Research
 
@@ -37,14 +37,25 @@ Published at Neural Computing and Applications 2020 <br>
 ## Projects
 
 **Exploring Variance in N-Step Actor-Critic Methods** <br>
-University of Amsterdam (October 2019) <br>
 *[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Claartje Barkhof](https://github.com/ClaartjeBarkhof), *[Vicky Foing](https://github.com/victoriafoing) & *[Alex Lindt](https://github.com/alex-lindt) <br>
-*University of Amsterdam <br>
+*University of Amsterdam (2019) <br>
 [[Article](rl_section.md)][[Code](https://github.com/dbtmpl/OPMask)]
 
 ![Lunar_landar](assets/rl_article/Lunar_landar.gif)
 
+
+**HandsOnVR** <br>
+*[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Lukas Bittner](), *[Kevin Rodrigues Nobre](), *[Jannis Volz]() & *[Marian Wiskow]() <br>
+*University of Hamburg (2018) <br>
+[[Article](https://www.inf.uni-hamburg.de/en/inst/ab/hci/projects/handsonvr.html)][[Video](https://www.youtube.com/watch?v=0a2r9THnyvg)]
+
+![handsonvr2](assets/handsonvr2.jpg)
+
+
+
+
+
 ---
 
-[1.2]: http://i.imgur.com/wWzX9uB.png (twitter icon without padding)
+[1.2]: http://i.imgur.com/wWzX9uB.png (Twitter)
 [![alt text][1.2] @dbtmpl](https://twitter.com/dbtmpl)
