@@ -8,8 +8,6 @@ occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim 
 
 ## Research
 
----
-
 **2021:** <br>
 
 **Prior to Segment: Foreground Cues for Weakly Annotated Classes in Partially Supervised Instance Segmentation** <br>
@@ -22,11 +20,11 @@ Accepted at ICCV 2021 <br>
 
 ---
 
-**2020** <br>
+**2020:** <br>
 
 **Solving visual object ambiguities when pointing: an unsupervised learning approach**<br>
 Published at Neural Computing and Applications 2020 <br>
-*‡[Doreen Jirak](https://scholar.google.com/citations?user=-HgMDDYAAAAJ&hl), *†[David Biertimpel](https://twitter.com/dbtmpl), *[Matthias Kerzel](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/kerzel.html) and *[Stefan Wermter](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermter.html) <br>
+*‡[Doreen Jirak](https://scholar.google.com/citations?user=-HgMDDYAAAAJ&hl), *†[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Matthias Kerzel](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/kerzel.html) and *[Stefan Wermter](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermter.html) <br>
 *University of Hamburg, ‡Istituto Italiano di Tecnologia, †University of Amsterdam<br>
 [[Paper](https://link.springer.com/article/10.1007/s00521-020-05109-w)][[Pre-Print](https://arxiv.org/abs/1912.06449)][[Code](https://github.com/dbtmpl/Solving-Visual-Object-Ambiguities-when-Pointing)]
 
@@ -35,6 +33,14 @@ Published at Neural Computing and Applications 2020 <br>
 ---
 
 ## Projects
+
+**Exploring Variance in N-Step Actor-Critic Methods** <br>
+University of Amsterdam (October 2019) <br>
+*[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Claartje Barkhof](https://github.com/ClaartjeBarkhof), *[Vicky Foing](https://github.com/victoriafoing) & *[Alex Lindt](https://github.com/alex-lindt) <br>
+*University of Amsterdam <br>
+[[Article](rl_section.md)][[Code](https://github.com/dbtmpl/OPMask)]
+
+![Lunar_landar](assets/rl_article/Lunar_landar.gif)
 
 ## CV
 
