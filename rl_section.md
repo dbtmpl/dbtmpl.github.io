@@ -1,7 +1,7 @@
 # Exploring Variance in N-Step Actor-Critic Methods
 
-####*[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Claartje Barkhof](https://github.com/ClaartjeBarkhof), *[Vicky Foing](https://github.com/victoriafoing) & *[Alex Lindt](https://github.com/alex-lindt) <br>
-###### *University of Amsterdam	|  October 2019
+#### *[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Claartje Barkhof](https://github.com/ClaartjeBarkhof), *[Vicky Foing](https://github.com/victoriafoing) & *[Alex Lindt](https://github.com/alex-lindt) <br>
+#### *University of Amsterdam	|  October 2019
 
 ![Lunar_landar](assets/rl_article/Lunar_landar.gif)
 
