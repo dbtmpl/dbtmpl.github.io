@@ -42,8 +42,7 @@ University of Amsterdam (October 2019) <br>
 
 ![Lunar_landar](assets/rl_article/Lunar_landar.gif)
 
-## CV
-
+---
 
 [1.2]: http://i.imgur.com/wWzX9uB.png (twitter icon without padding)
 [![alt text][1.2] @dbtmpl](https://twitter.com/dbtmpl)

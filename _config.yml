@@ -1,9 +1,9 @@
 theme: jekyll-theme-minimal
 title: David Biertimpel
-logo: ./assets/portrait3.jpg
+logo: ./assets/portrait.jpg
 author: David Biertimpel
 baseurl: ""
-description: Online CV
+description: [CV](https://github.com/dbtmpl/Curriculum-Vitae)
 profile_url: "https://dbtmpl.github.io/"
 # Build settings
 markdown: kramdown
