@@ -1,6 +1,6 @@
 theme: jekyll-theme-minimal
 title: David Biertimpel
-title-image: "./portrait.jpg"
+logo: ./assets/portrait.jpg
 author: David Biertimpel
 baseurl: ""
 description: Online CV
