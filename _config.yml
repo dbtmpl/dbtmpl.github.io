@@ -1,1 +1,20 @@
 theme: jekyll-theme-minimal
+title: David Biertimpel
+author: David Biertimpel
+baseurl: ""
+description: Online CV
+profile_url: "https://dbtmpl.github.io/"
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+excerpt_separator: <!--more-->
+gems:
+  - jekyll-feed
+exclude:
+  - Gemfile
+  - Gemfile.lock
+kramdown:
+  input: GFM
+  auto_ids: true
+  syntax_highlighter: rouge
