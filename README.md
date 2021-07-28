@@ -56,8 +56,7 @@ and *[Stefan Wermter](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermt
 ## Projects
 
 **Towards Neural Ranking for Mixed-Initiative Conversational Search** <br>
-*[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
-, *[Hinrik Snær Guðmundsson](https://www.linkedin.com/in/hinrik-sn%C3%A6r-gu%C3%B0mundsson-105b09148/) <br>
+*[Hinrik Snær Guðmundsson](https://www.linkedin.com/in/hinrik-sn%C3%A6r-gu%C3%B0mundsson-105b09148/), *[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en) <br>
 *University of Amsterdam (2020) <br>
 [[Article](assets/ir/ir.pdf)][[Code](https://github.com/dbtmpl/Information-Retrieval-2)]
 
@@ -78,8 +77,7 @@ and *[Stefan Wermter](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermt
 ---
 
 **HandsOnVR** <br>
-*[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Lukas Bittner]()
-, *[Kevin Rodrigues Nobre](), *[Jannis Volz]() & *[Marian Wiskow]() <br>
+*[Lukas Bittner](), *[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Kevin Rodrigues Nobre](), *[Jannis Volz]() & *[Marian Wiskow]() <br>
 *University of Hamburg (2018) <br>
 [[Article](https://www.inf.uni-hamburg.de/en/inst/ab/hci/projects/handsonvr.html)][[Video](https://www.youtube.com/watch?v=0a2r9THnyvg)]
 
