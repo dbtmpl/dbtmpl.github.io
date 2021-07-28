@@ -19,7 +19,7 @@ If you want to talk to me, feel free to contact me via email or Twitter.
 [Twitter: @dbtmpl](https://twitter.com/dbtmpl)
 __⋅__ [Email: david(dot)biertimpel(at)protonmail(dot)com](mailto:david.biertimpel@protonmail.com)
 
-You can find my CV [here](https://github.com/dbtmpl/Curriculum-Vitae).
+You can find my CV [here](assets/cv.pdf).
 
 ## Research
 
