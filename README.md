@@ -3,10 +3,10 @@
 Hi there! I am David and I enjoy working on computer vision and machine learning research related things. In January
 2021 I finished my two-year research Master's in Artificial Intelligence at the University of Amsterdam. I spent my
 thesis with the Autonomous Driving Team at TomTom. The internship resulted in the publication _Prior to Segment:
-Foreground Cues for Weakly Annotated Classes in Partially Supervised Instance Segmentation_ which was accepted at __ICCV
-2021__.
+Foreground Cues for Weakly Annotated Classes in Partially Supervised Instance Segmentation_ which was accepted at _ICCV
+2021_.
 
-I spent my undergraduate in the field of Human Computer Interaction where my focus lied on human-robot interaction,
+I pursued my undergraduate in the field of Human Computer Interaction where my focus lied on human-robot interaction,
 biopsychology and creating intuitive interfaces in VR. I also had the chance to dive deep into software engineering
 principles, algorithms & data structures and theoretical informatics.
 
