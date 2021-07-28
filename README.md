@@ -10,9 +10,9 @@ I spent my undergraduate in the field of Human Computer Interaction where my foc
 biopsychology and creating intuitive interfaces in VR. I also had the chance to dive deep into software engineering
 principles, algorithms & data structures and theoretical informatics.
 
-Lately, I've been interested in 3D computer vision, computer graphics, and how to design efficient models that run in
-real time on edge devices. These interests include applications such as autonomous driving, computer vision for video
-calls and AR for mobile devices.
+Lately, I've been interested in 3D computer vision, computer graphics, reinforcement learning and how to design
+efficient models that run in real time on edge devices. These interests include applications such as autonomous driving,
+computer vision for video calls and AR for mobile devices.
 
 If you want to talk to me, feel free to contact me via email or Twitter.
 
@@ -34,7 +34,7 @@ Accepted at ICCV 2021 <br>
 *University of Amsterdam, †TomTom<br>
 [[Pre-Print](https://arxiv.org/abs/2011.11787)][[Code](https://github.com/dbtmpl/OPMask)]
 
-![Image](assets/opmask1.png?raw=true)
+![Image](assets/opmask/opmask1.png?raw=true)
 
 ---
 
@@ -42,26 +42,40 @@ Accepted at ICCV 2021 <br>
 
 **Solving visual object ambiguities when pointing: an unsupervised learning approach**<br>
 Published at Neural Computing and Applications 2020 <br>
-*‡[Doreen Jirak](https://scholar.google.com/citations?user=-HgMDDYAAAAJ&hl), *†[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
+*‡[Doreen Jirak](https://scholar.google.com/citations?user=-HgMDDYAAAAJ&hl), *
+†[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
 , *[Matthias Kerzel](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/kerzel.html)
 and *[Stefan Wermter](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermter.html) <br>
 *University of Hamburg, ‡Istituto Italiano di Tecnologia, †University of Amsterdam<br>
 [[Paper](https://link.springer.com/article/10.1007/s00521-020-05109-w)][[Pre-Print](https://arxiv.org/abs/1912.06449)][[Code](https://github.com/dbtmpl/Solving-Visual-Object-Ambiguities-when-Pointing)]
 
-![Image](assets/pointing1.png?raw=true)
+![Image](assets/pointing/pointing1.png)
 
 ---
 
 ## Projects
+
+**Towards Neural Ranking for Mixed-Initiative Conversational Search** <br>
+*[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
+, *[Hinrik Snær Guðmundsson](https://www.linkedin.com/in/hinrik-sn%C3%A6r-gu%C3%B0mundsson-105b09148/) <br>
+*University of Amsterdam (2020) <br>
+[[Article](assets/ir/ir.pdf)][[Code](https://github.com/dbtmpl/Information-Retrieval-2)]
+
+![Lunar_landar](assets/ir/ir.png)
+
+
+---
 
 **Exploring Variance in N-Step Actor-Critic Methods** <br>
 *[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
 , *[Claartje Barkhof](https://github.com/ClaartjeBarkhof), *[Vicky Foing](https://github.com/victoriafoing)
 & *[Alex Lindt](https://github.com/alex-lindt) <br>
 *University of Amsterdam (2019) <br>
-[[Article](rl_section.md)][[Code](https://github.com/dbtmpl/OPMask)]
+[[Article](rl_section.md)][[Code](https://github.com/alex-lindt/variance_n_step_actor_critic)]
 
 ![Lunar_landar](assets/rl_article/Lunar_landar.gif)
+
+---
 
 **HandsOnVR** <br>
 *[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en), *[Lukas Bittner]()
@@ -69,6 +83,6 @@ and *[Stefan Wermter](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermt
 *University of Hamburg (2018) <br>
 [[Article](https://www.inf.uni-hamburg.de/en/inst/ab/hci/projects/handsonvr.html)][[Video](https://www.youtube.com/watch?v=0a2r9THnyvg)]
 
-![handsonvr2](assets/handsonvr2.jpg)
+![handsonvr2](assets/handsonvr/handsonvr2.jpg)
 
 ---
