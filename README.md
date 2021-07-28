@@ -42,8 +42,7 @@ Accepted at ICCV 2021 <br>
 
 **Solving visual object ambiguities when pointing: an unsupervised learning approach**<br>
 Published at Neural Computing and Applications 2020 <br>
-*‡[Doreen Jirak](https://scholar.google.com/citations?user=-HgMDDYAAAAJ&hl), *
-†[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
+*‡[Doreen Jirak](https://scholar.google.com/citations?user=-HgMDDYAAAAJ&hl), *†[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
 , *[Matthias Kerzel](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/kerzel.html)
 and *[Stefan Wermter](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermter.html) <br>
 *University of Hamburg, ‡Istituto Italiano di Tecnologia, †University of Amsterdam<br>
