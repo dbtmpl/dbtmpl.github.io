@@ -172,33 +172,28 @@ For the Lunar Lander environment, we also see that REINFORCE with baseline outpe
 
 #### Mountain Car
 
-<img src="assets/rl_article/general_cartpole.gif" alt="general_cartpole" style="zoom:50%;" />
-
+![general_cartpole](assets/rl_article/general_cartpole.gif)
 Figure 4: Behavior in Mountain Car environment by Q actor-critic (n-step=1)
 
 After a considerable amount of parameter tuning and after running all of our described agents in the Mountain Cari environment, our implementation could not solve the Mountain Car a problem. For reasons we can only speculate about, the agent did not manage to explore enough to reach the top a single time. We assume that because policy gradient methods are on-policy and the exploration is determined by the distribution over actions, the evenly distributed reward of -1 is not enough to enforce enough exploration. Most of our agents perform as shown in the gif above.
 
 ### Comparing random seeds
-<img src="assets/rl_article/random_seed.png" alt="general_cartpole" style="zoom:70%;" />
-
-
+![random_seed](assets/rl_article/random_seed.png)
 Figure 5: Performance of one step Advantage Actor-Critic on cartpole environment with different seeds
 
 To illustrate the variance over the several runs previous sections, we will now look at two completely identical agents living in the same environment, where the only difference is the selected random seed. While the left agent solves the task almost perfectly reaching the maximum possible reward (not visible due to smoothing), the right agent fails horribly by ranging between 5 and 10 reward over the whole episode. This shows how dependent policy gradient methods are on having a good initialization. In this case we further see another disadvantage of policy gradient: a bad policy leads to bad data. So if the agent behaves suboptimally after some *wrong* updates in the policy space, the collected data will also be suboptimal. In some cases this can lead to the agent not being able to recover from that. 
 
 ### Variance-bias debate
 
-<img src="assets/rl_article/variance_rewards_MC.png" alt="variance_rewards_MC_A_Q" style="zoom:99%;" />
+![variance_rewards_MC_A_Q](assets/rl_article/variance_rewards_MC_A_Q.png)
 Figure 6: Cumulative rewards plotted with variance over 5 runs during training for different algorithms
-#####
 
 For the experiments of this section we picked the most successful n-step value for advantage actor-critic and Q actor-critic respectively and compared those versions to our baseline algorithm. The experiments are done in the CartPole-v0 environment.To understand the differences of our approaches with regard to the bias-variance tradeoff, we take a closer look at the variance of the rewards and losses they obtain while training. The first figure shows the variance in rewards over the course of training. For REINFORCE with baseline, we can see that the rewards have overall the lowest variance and that the variance is highest in the beginning and gets less over the training. This means that it has learned optimal behavior, which is likely due to the fact that the environment is so simple. In contrast, for Advantage actor-critic and especially for Q actor-critic we see that the variance in rewards is generally higher and also gets higher over training. Both algorithms are less stable in their performance than the REINFORCE with baseline. It is apparent that Q actor-critic is more instable than the Advantage actor-critic in general. Even if it occasionally ‘solves’ the environment in later training steps, obtaining close to the maximum reward of 200, it does obtain rewards of down to 20 at the same time. The Advantage actor-critic, even if more stable that the Q actor-critic, does not work as reliable as the REINFORCE with baseline. Although it achieves comparatively constant rewards between 150 and 200 in the later training steps, it seems to never fully converge to the optimal policy. We interpret this as an expression of the bias of the Advantage actor-critic algorithm, as the known unbiased REINFORCE with baseline does not show this behavior.
 
 Though it achieves a decent performance, Advantage actor-critic does not achieve the same optimal performance as REINFORCE with baseline, which could be due to bias.
 
-<img src="assets/rl_article/variance_losses_MC.png" alt="variance_losses_MC_A_Q" style="zoom:99%;" />
+![variance_losses_MC_A_Q](assets/rl_article/variance_losses_MC_A_Q.png)
 Figure 7: Actor and critic loss plotted with variance over 5 runs during training for different algorithms
-#####
 
 When we consider the variance of the losses of the actor and critic, we first observe that all curves show a rather high variance, which is not surprising. However, we quickly observe that in the case of the actor losses the REINFORCE loss starts low and gets larger the longer the episode takes. This makes sense as the variance in the full sampled trajectories should also be reflected in the loss. By contrast the Advantage actor-critic and Q actor-critic agents are much more homoscedastic in that sense. What is also striking about the actor loss is that it is not really decreasing. This is actually reasonable because when we look at the policy gradient update we derived in the beginning. We see that it’s not a loss in the classical sense, but a procedure to increase the probability of well performing actions.
 
@@ -236,7 +231,7 @@ Although, our procedure showed success in (some/most) cases we generally observe
 
 ## Code
 
-Our code can be viewed at https://github.com/ClaartjeBarkhof/ReproducibilityLab_2019
+Our code can be viewed [here](https://github.com/alex-lindt/variance_n_step_actor_critic).
 
 ## Citations
 
