@@ -17,7 +17,8 @@ mobile robotics, computer vision for video calls and AR for mobile devices.
 If you want to talk to me, feel free to contact me via email or Twitter.
 
 [Twitter: @dbtmpl](https://twitter.com/dbtmpl)
-__⋅__ [Email: david(dot)biertimpel(at)protonmail(dot)com](mailto:david.biertimpel@protonmail.com)
+__⋅__ Email: david(_dot_)biertimpel(_at_)protonmail(_dot_)com
+             
 
 You can find my CV [here](assets/cv.pdf).
 
