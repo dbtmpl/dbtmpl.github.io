@@ -1,89 +1,41 @@
-## About Me
+# dbtmpl.github.io
 
-Hi there! I am David and I enjoy working on computer vision and machine learning research related things. In January
-2021 I finished my two-year research Master's in Artificial Intelligence at the University of Amsterdam. I spent my
-thesis with the Autonomous Driving Team at TomTom. The internship resulted in the publication _Prior to Segment:
-Foreground Cues for Weakly Annotated Classes in Partially Supervised Instance Segmentation_ which was accepted at _ICCV
-2021_.
+Personal website of David Biertimpel, built with [Jekyll](https://jekyllrb.com/) and deployed to GitHub Pages by
+the workflow in `.github/workflows/pages.yml` on every push to `main`.
 
-I pursued my undergraduate in the field of Human Computer Interaction where my focus lied on human-robot interaction,
-biopsychology and creating intuitive interfaces in VR. I also had the chance to dive deep into software engineering
-principles, algorithms & data structures and theoretical informatics.
+## Layout
 
-Lately, I've been interested in 3D computer vision, computer graphics, reinforcement learning and how to design
-efficient models that run in real time on edge devices. These interests include applications such as autonomous driving,
-mobile robotics, computer vision for video calls and AR for mobile devices.
+| Path | Contents |
+| --- | --- |
+| `index.html` | Home page: hero, about, research, projects, latest posts |
+| `_data/research.yml`, `_data/projects.yml` | Papers and projects shown on the home page |
+| `blog/index.html` | Blog index (lists everything in `_posts/`) |
+| `_posts/` | Blog posts, named `YYYY-MM-DD-slug.md` |
+| `_drafts/` | Unpublished drafts (see `example-post.md` for math and code syntax) |
+| `n-step-actor-critic.md` | RL student-project article, served at `/rl_section.html` |
+| `assets/js/squirrel.js` | The pixel-art squirrel next to the name |
+| `assets/css/style.css` | All styles; colors are CSS variables at the top (with a dark mode) |
 
-If you want to talk to me, feel free to contact me via email or Twitter.
+## Math
 
-[Twitter: @dbtmpl](https://twitter.com/dbtmpl)
-__⋅__ Email: david(_dot_)biertimpel(_at_)protonmail(_dot_)com
-             
+Write LaTeX between `$$ … $$`. Inline in a sentence it renders inline; on its own lines, separated by blank
+lines, it renders as a display equation. Pages need `math: true` in the front matter (posts have it by default).
+KaTeX renders it in the browser.
 
-You can find my CV [here](assets/cv.pdf).
+## Run locally
 
-## Research
+With Ruby 3.x:
 
-**2021:** <br>
+```sh
+bundle install
+bundle exec jekyll serve --livereload --drafts
+```
 
-**Prior to Segment: Foreground Cues for Weakly Annotated Classes in Partially Supervised Instance Segmentation** <br>
-Accepted at ICCV 2021 <br>
-*†[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en),
-†[Sindi Shkodrani](https://scholar.google.nl/citations?user=fFVkKNgAAAAJ&hl=en)
-, *[Anil S. Baslamisli](https://scholar.google.nl/citations?user=mc4l2J4AAAAJ&hl=en) and
-†[Nóra Baka](https://scholar.google.com/citations?user=ahfzQHEAAAAJ&hl=en) <br>
-*University of Amsterdam, †TomTom<br>
-[[Pre-Print](https://arxiv.org/abs/2011.11787)][[Code](https://github.com/dbtmpl/OPMask)]
+Or with Docker, without installing Ruby:
 
-![Image](assets/opmask/opmask1.png?raw=true)
+```sh
+docker run --rm -it -p 4000:4000 -v "$PWD":/site -w /site ruby:3.4 \
+  sh -c "bundle install && bundle exec jekyll serve --host 0.0.0.0 --drafts"
+```
 
----
-
-**2020:** <br>
-
-**Solving visual object ambiguities when pointing: an unsupervised learning approach**<br>
-Published at Neural Computing and Applications 2020 <br>
-*‡[Doreen Jirak](https://scholar.google.com/citations?user=-HgMDDYAAAAJ&hl), *
-†[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
-, *[Matthias Kerzel](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/kerzel.html)
-and *[Stefan Wermter](https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermter.html) <br>
-*University of Hamburg, ‡Istituto Italiano di Tecnologia, †University of Amsterdam<br>
-[[Paper](https://link.springer.com/article/10.1007/s00521-020-05109-w)][[Pre-Print](https://arxiv.org/abs/1912.06449)][[Code](https://github.com/dbtmpl/Solving-Visual-Object-Ambiguities-when-Pointing)]
-
-![Image](assets/pointing/pointing1.png)
-
----
-
-## Projects
-
-**Towards Neural Ranking for Mixed-Initiative Conversational Search** <br>
-*[Hinrik Snær Guðmundsson](https://www.linkedin.com/in/hinrik-sn%C3%A6r-gu%C3%B0mundsson-105b09148/)
-, *[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en) <br>
-*University of Amsterdam (2020) <br>
-[[Article](assets/ir/ir.pdf)][[Code](https://github.com/dbtmpl/Information-Retrieval-2)]
-
-![Lunar_landar](assets/ir/ir.png)
-
-
----
-
-**Exploring Variance in N-Step Actor-Critic Methods** <br>
-*[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
-, *[Claartje Barkhof](https://github.com/ClaartjeBarkhof), *[Vicky Foing](https://github.com/victoriafoing)
-& *[Alex Lindt](https://github.com/alex-lindt) <br>
-*University of Amsterdam (2019) <br>
-[[Article](rl_section.md)][[Code](https://github.com/alex-lindt/variance_n_step_actor_critic)]
-
-![Lunar_landar](assets/rl_article/Lunar_landar.gif)
-
----
-
-**HandsOnVR** <br>
-*[Lukas Bittner](), *[David Biertimpel](https://scholar.google.com/citations?user=AIu7ihgAAAAJ&hl=en)
-, *[Kevin Rodrigues Nobre](), *[Jannis Volz]() & *[Marian Wiskow]() <br>
-*University of Hamburg (2018) <br>
-[[Article](https://www.inf.uni-hamburg.de/en/inst/ab/hci/projects/handsonvr.html)][[Video](https://www.youtube.com/watch?v=0a2r9THnyvg)]
-
-![handsonvr2](assets/handsonvr/handsonvr2.jpg)
-
----
+Then open http://localhost:4000.

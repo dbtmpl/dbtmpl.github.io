@@ -1,0 +1,23 @@
+{%- assign e = include.entry -%}
+<article class="entry">
+  {%- if e.image -%}
+  <a class="entry__thumb" href="{{ e.links[0].url | relative_url }}" tabindex="-1" aria-hidden="true">
+    <img src="{{ e.image | relative_url }}" alt="" loading="lazy">
+  </a>
+  {%- endif -%}
+  <div class="entry__body">
+    <h3 class="entry__title"><a href="{{ e.links[0].url | relative_url }}">{{ e.title }}</a></h3>
+    <p class="entry__authors">
+      {%- for a in e.authors -%}
+        {%- if a.me -%}<strong>{{ a.name }}</strong>{%- elsif a.url -%}<a href="{{ a.url }}">{{ a.name }}</a>{%- else -%}{{ a.name }}{%- endif -%}
+        {%- if a.aff -%}<sup>{{ a.aff }}</sup>{%- endif -%}
+        {%- unless forloop.last -%}, {% endunless -%}
+      {%- endfor -%}
+    </p>
+    {%- if e.affiliations -%}<p class="entry__aff">{{ e.affiliations }}</p>{%- endif -%}
+    <p class="entry__venue">{{ e.venue }}</p>
+    <p class="entry__links">
+      {%- for l in e.links -%}<a class="tag" href="{{ l.url | relative_url }}">{{ l.label }}</a>{%- endfor -%}
+    </p>
+  </div>
+</article>

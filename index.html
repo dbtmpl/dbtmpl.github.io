@@ -1,0 +1,101 @@
+---
+layout: default
+squirrel: true
+---
+<section class="hero" id="top">
+  <div class="hero__text">
+    <div class="hero__name-wrap">
+      <canvas class="squirrel" id="squirrel" aria-hidden="true"></canvas>
+      <h1 class="hero__name">David Biertimpel</h1>
+    </div>
+    <p class="hero__tagline">{{ site.tagline }} · Berlin</p>
+    <ul class="hero__links">
+      <li><a class="pill" href="#contact" id="email-link">Email</a></li>
+      <li><a class="pill" href="https://github.com/{{ site.social.github }}">GitHub</a></li>
+      <li><a class="pill" href="https://scholar.google.com/citations?user={{ site.social.scholar }}&amp;hl=en">Scholar</a></li>
+      <li><a class="pill" href="https://www.linkedin.com/in/{{ site.social.linkedin }}/">LinkedIn</a></li>
+      <li><a class="pill" href="https://x.com/{{ site.social.twitter }}">X / Twitter</a></li>
+      <li><a class="pill pill--accent" href="{{ '/assets/cv.pdf' | relative_url }}">CV</a></li>
+    </ul>
+  </div>
+  <div class="hero__photo">
+    <img src="{{ '/assets/portrait.jpg' | relative_url }}" alt="Portrait of David Biertimpel" width="640" height="640">
+  </div>
+</section>
+
+<section class="section" id="about">
+  <h2 class="section__title">About</h2>
+  <p>
+    Hi there! I'm David, a machine learning engineer at TomTom. For the past six-plus years I've been
+    building large-scale perception and mapping systems and the MLOps pipelines behind them. Today my
+    models detect traffic signs and traffic lights across Europe and North America. I've worked on pretty
+    much every stage of the ML lifecycle: data ingestion, ground truth, training, distributed inference,
+    evaluation, and getting models promoted and released. Some of my favourite wins are less glamorous:
+    cutting the time to fix production failures from days to hours, and building tools that make 50+
+    engineers around me more productive.
+  </p>
+  <p>
+    My roots are in computer vision research. I did a research master's in Artificial Intelligence at the
+    University of Amsterdam and wrote my thesis with TomTom's autonomous driving team, which turned into a
+    first-author paper at <a href="#research">ICCV 2021</a>. Before that, I studied Human-Computer Interaction
+    in Hamburg and spent a lot of time with robots and VR headsets.
+  </p>
+  <p>
+    I'm happiest where applied science, ML engineering and software engineering meet: taking an ambiguous
+    problem across research, product and engineering teams all the way to a shipped system (which earned me
+    an org-level leadership award). Lately I also build LLM agent tooling that makes the engineers around me
+    faster, and I'm part of TomTom's cross-org AI mentoring group.
+  </p>
+  <p>
+    I'm drawn to problems where new ML research has to become a dependable product, especially in perception
+    and generative modelling. I also have a soft spot for efficient computer vision that runs in real time on
+    edge devices, and for physics-based machine learning. These days I'm especially curious about diffusion
+    models seen through the lens of statistical physics: rare events, transition paths, and the thermodynamics
+    of learning. Some of that will land on the <a href="{{ '/blog/' | relative_url }}">blog</a> soon.
+  </p>
+  <p id="contact">
+    If you want to talk, feel free to reach out by email:
+    <span class="obf" data-u="david.biertimpel" data-d="protonmail.com">david (dot) biertimpel (at) protonmail (dot) com</span>.
+  </p>
+</section>
+
+<section class="section" id="research">
+  <h2 class="section__title">Research</h2>
+  {% for e in site.data.research %}{% include entry.html entry=e %}{% endfor %}
+</section>
+
+<section class="section" id="projects">
+  <h2 class="section__title">Projects</h2>
+  <p class="section__lead">Selected course and team projects from my studies.</p>
+  {% for e in site.data.projects %}{% include entry.html entry=e %}{% endfor %}
+</section>
+
+<section class="section" id="blog">
+  <h2 class="section__title">Blog</h2>
+  {% if site.posts.size > 0 %}
+  <ul class="postlist">
+    {% for post in site.posts limit:3 %}
+    <li class="postlist__item">
+      <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %Y' }}</time>
+      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+    </li>
+    {% endfor %}
+  </ul>
+  <p><a href="{{ '/blog/' | relative_url }}">All posts &rarr;</a></p>
+  {% else %}
+  <p class="section__lead">Personal writing will live here. <a href="{{ '/blog/' | relative_url }}">Visit the blog &rarr;</a></p>
+  {% endif %}
+</section>
+
+<script>
+  // Assemble the address in the browser so it is not in the HTML for scrapers.
+  (function () {
+    var s = document.querySelector('.obf');
+    var addr = s.dataset.u + '@' + s.dataset.d;
+    var a = document.createElement('a');
+    a.href = 'mailto:' + addr;
+    a.textContent = addr;
+    s.replaceWith(a);
+    document.getElementById('email-link').href = 'mailto:' + addr;
+  })();
+</script>

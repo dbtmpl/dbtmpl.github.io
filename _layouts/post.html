@@ -1,0 +1,19 @@
+---
+layout: default
+---
+<article class="article">
+  <header class="article__header">
+    {% if page.kicker %}<p class="kicker">{{ page.kicker }}</p>{% endif %}
+    <h1 class="article__title">{{ page.title }}</h1>
+    {% if page.authors %}<p class="article__authors">{{ page.authors }}</p>{% endif %}
+    <p class="article__meta">
+      {% if page.affiliation %}{{ page.affiliation }} · {% endif %}
+      <time datetime="{{ page.date | date_to_xmlschema }}">{{ page.date | date: '%B %Y' }}</time>
+      {% if page.code %} · <a href="{{ page.code }}">Code</a>{% endif %}
+    </p>
+  </header>
+  <div class="prose">
+    {{ content }}
+  </div>
+  <p class="article__back"><a href="{{ page.back_url | default: '/blog/' | relative_url }}">&larr; {{ page.back_label | default: 'All posts' }}</a></p>
+</article>

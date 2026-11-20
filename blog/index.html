@@ -1,0 +1,29 @@
+---
+layout: default
+title: Blog
+description: Personal writing by David Biertimpel.
+---
+<section class="section section--first">
+  <h1 class="page-title">Blog</h1>
+  <p class="section__lead">Things I write on my own: notes, experiments and ideas. Subscribe via <a href="{{ '/blog/feed.xml' | relative_url }}">RSS</a>.</p>
+
+  {% if site.posts.size > 0 %}
+    {% assign by_year = site.posts | group_by_exp: "p", "p.date | date: '%Y'" %}
+    {% for year in by_year %}
+    <h2 class="postlist__year">{{ year.name }}</h2>
+    <ul class="postlist">
+      {% for post in year.items %}
+      <li class="postlist__item">
+        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %d' }}</time>
+        <div>
+          <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
+          {% if post.description %}<p class="postlist__desc">{{ post.description }}</p>{% endif %}
+        </div>
+      </li>
+      {% endfor %}
+    </ul>
+    {% endfor %}
+  {% else %}
+    <p class="empty">No posts yet. The squirrel is still gathering nuts.</p>
+  {% endif %}
+</section>
