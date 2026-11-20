@@ -1,0 +1,30 @@
+# Papers. Authors: "me: true" is shown in bold; "aff" holds affiliation marks.
+- year: 2021
+  title: "Prior to Segment: Foreground Cues for Weakly Annotated Classes in Partially Supervised Instance Segmentation"
+  venue: ICCV 2021
+  authors:
+    - { name: David Biertimpel, me: true, aff: "*†" }
+    - { name: Sindi Shkodrani, aff: "†" }
+    - { name: Anil S. Baslamisli, url: "https://scholar.google.nl/citations?user=mc4l2J4AAAAJ&hl=en", aff: "*" }
+    - { name: Nóra Baka, url: "https://scholar.google.com/citations?user=ahfzQHEAAAAJ&hl=en", aff: "†" }
+  affiliations: "*University of Amsterdam, †TomTom"
+  image: /assets/opmask/opmask1.png
+  links:
+    - { label: Paper, url: "https://openaccess.thecvf.com/content/ICCV2021/html/Biertimpel_Prior_to_Segment_Foreground_Cues_for_Weakly_Annotated_Classes_in_ICCV_2021_paper.html" }
+    - { label: arXiv, url: "https://arxiv.org/abs/2011.11787" }
+    - { label: Code, url: "https://github.com/dbtmpl/OPMask" }
+
+- year: 2020
+  title: "Solving Visual Object Ambiguities When Pointing: An Unsupervised Learning Approach"
+  venue: Neural Computing and Applications 2020
+  authors:
+    - { name: Doreen Jirak, url: "https://scholar.google.com/citations?user=-HgMDDYAAAAJ&hl=en", aff: "*‡" }
+    - { name: David Biertimpel, me: true, aff: "*†" }
+    - { name: Matthias Kerzel, url: "https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/kerzel.html", aff: "*" }
+    - { name: Stefan Wermter, url: "https://www.inf.uni-hamburg.de/en/inst/ab/wtm/people/wermter.html", aff: "*" }
+  affiliations: "*University of Hamburg, ‡Istituto Italiano di Tecnologia, †University of Amsterdam"
+  image: /assets/pointing/pointing1.png
+  links:
+    - { label: Paper, url: "https://link.springer.com/article/10.1007/s00521-020-05109-w" }
+    - { label: arXiv, url: "https://arxiv.org/abs/1912.06449" }
+    - { label: Code, url: "https://github.com/dbtmpl/Solving-Visual-Object-Ambiguities-when-Pointing" }

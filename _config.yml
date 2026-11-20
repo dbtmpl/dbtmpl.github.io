@@ -1,20 +1,46 @@
-theme: jekyll-theme-minimal
 title: David Biertimpel
-logo: ./assets/portrait.jpg
 author: David Biertimpel
+description: Machine learning engineer working on perception, MLOps and generative modelling.
+url: "https://dbtmpl.github.io"
 baseurl: ""
-description: Computer Vision Research Engineer
-profile_url: "https://dbtmpl.github.io/"
+lang: en
+
+# Shown in the header and footer
+tagline: Machine Learning Engineer
+social:
+  github: dbtmpl
+  twitter: dbtmpl
+  linkedin: david-biertimpel
+  scholar: AIu7ihgAAAAJ
+
 # Build settings
 markdown: kramdown
 highlighter: rouge
 excerpt_separator: <!--more-->
-gems:
-  - jekyll-feed
-exclude:
-  - Gemfile
-  - Gemfile.lock
 kramdown:
   input: GFM
   auto_ids: true
   syntax_highlighter: rouge
+  math_engine: mathjax   # emits \( \) and \[ \]; KaTeX renders them in the browser
+
+permalink: /blog/:year/:title/
+
+plugins:
+  - jekyll-feed
+  - jekyll-seo-tag
+  - jekyll-sitemap
+
+feed:
+  path: blog/feed.xml
+
+defaults:
+  - scope: { path: "", type: posts }
+    values: { layout: post, math: true }
+
+exclude:
+  - README.md
+  - Gemfile
+  - Gemfile.lock
+  - vendor
+  - .github
+  - .idea

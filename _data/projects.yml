@@ -1,0 +1,35 @@
+# Student and course projects (not the personal blog).
+- title: Towards Neural Ranking for Mixed-Initiative Conversational Search
+  venue: University of Amsterdam, 2020
+  authors:
+    - { name: Hinrik Snær Guðmundsson, url: "https://www.linkedin.com/in/hinrik-sn%C3%A6r-gu%C3%B0mundsson-105b09148/" }
+    - { name: David Biertimpel, me: true }
+  image: /assets/ir/ir.png
+  links:
+    - { label: Report, url: /assets/ir/ir.pdf }
+    - { label: Code, url: "https://github.com/dbtmpl/Information-Retrieval-2" }
+
+- title: Exploring Variance in N-Step Actor-Critic Methods
+  venue: University of Amsterdam, 2019
+  authors:
+    - { name: David Biertimpel, me: true }
+    - { name: Claartje Barkhof, url: "https://github.com/ClaartjeBarkhof" }
+    - { name: Vicky Foing, url: "https://github.com/victoriafoing" }
+    - { name: Alex Lindt, url: "https://github.com/axlindt" }
+  image: /assets/rl_article/lunar_lander.gif
+  links:
+    - { label: Article, url: /rl_section.html }
+    - { label: Code, url: "https://github.com/axlindt/variance_n_step_actor_critic" }
+
+- title: HandsOnVR
+  venue: University of Hamburg, 2018
+  authors:
+    - { name: Lukas Bittner }
+    - { name: David Biertimpel, me: true }
+    - { name: Kevin Rodrigues Nobre }
+    - { name: Jannis Volz }
+    - { name: Marian Wiskow }
+  image: /assets/handsonvr/handsonvr2.jpg
+  links:
+    - { label: Project page, url: "https://www.inf.uni-hamburg.de/en/inst/ab/hci/projects/handsonvr.html" }
+    - { label: Video, url: "https://www.youtube.com/watch?v=0a2r9THnyvg" }
