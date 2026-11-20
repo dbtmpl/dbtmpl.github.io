@@ -1,6 +1,8 @@
 /*
- * Pixel-art squirrel that wanders back and forth above the name, stopping
- * now and then to sit and flick its tail. It never leaves its strip.
+ * Pixel-art squirrel that wanders back and forth along the top of the name.
+ * It always stops at either end of the name; sometimes it loses its balance
+ * at the edge, catches itself, and scurries back the other way. It also sits
+ * down now and then mid-way.
  * Honors prefers-reduced-motion (it just sits still).
  */
 (function () {
@@ -84,12 +86,17 @@
 
   var SCALE = 2;              // CSS pixels per sprite pixel
   var SPEED = 90;             // CSS px per second while running
-  var RUN_MS = [1500, 4000];  // run this long (random) before the next stop
+  var RUN_MS = [2500, 6000];  // run this long (random) before a stop mid-way
   var SIT_MS = [1800, 3800];  // sit this long (random)
+  var WOBBLE_CHANCE = 0.35;   // chance to lose balance when reaching an edge
+  var WOBBLE_MS = 1600;
+  var FOOT = 18.5;            // sprite column of the front feet (pivot for the wobble)
+  var HEADROOM = 10 * SCALE;  // room above the sprite for tilting and the "!"
 
   var canvas = document.getElementById("squirrel");
   if (!canvas) return;
   var ctx = canvas.getContext("2d");
+  var name = document.querySelector(".hero__name");
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)");
   var darkQ = window.matchMedia("(prefers-color-scheme: dark)");
 
@@ -115,54 +122,97 @@
 
   function rand(r) { return r[0] + Math.random() * (r[1] - r[0]); }
 
+  // Width of the rendered name text (the h1 box itself spans the whole column).
+  function nameWidth() {
+    if (!name) return canvas.clientWidth;
+    var r = document.createRange();
+    r.selectNodeContents(name);
+    return r.getBoundingClientRect().width;
+  }
+
   var dpr = 1, maxX = 0;
   function resize() {
     dpr = window.devicePixelRatio || 1;
     var cssW = canvas.clientWidth;
     canvas.width = Math.round(cssW * dpr);
-    canvas.height = Math.round((spriteH + SCALE) * dpr);
-    canvas.style.height = spriteH + SCALE + "px";
-    maxX = Math.max(0, cssW - spriteW);
-    x = Math.min(x, maxX);
+    canvas.height = Math.round((HEADROOM + spriteH + SCALE) * dpr);
+    canvas.style.height = HEADROOM + spriteH + SCALE + "px";
+    // Right edge: front feet line up with the end of the name.
+    var edge = Math.min(cssW, nameWidth());
+    maxX = Math.max(0, Math.min(cssW - spriteW, edge - FOOT * SCALE));
+    x = Math.max(0, Math.min(x, maxX));
   }
 
-  // dir: 1 = facing right, -1 = facing left (sprite is mirrored)
-  function draw(key, x, dir) {
+  // dir: 1 = facing right, -1 = facing left (mirrored). tilt: degrees, nose-down positive.
+  function draw(key, x, dir, tilt, alarm) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.imageSmoothingEnabled = false;
-    var y = key === "run2" ? 0 : SCALE;
-    if (dir < 0) {
-      ctx.setTransform(-dpr, 0, 0, dpr, (Math.round(x) + spriteW) * dpr, 0);
-      ctx.drawImage(bake(key), 0, y, spriteW, spriteH);
-    } else {
-      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-      ctx.drawImage(bake(key), Math.round(x), y, spriteW, spriteH);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x = Math.round(x);
+    var y = HEADROOM + (key === "run2" ? 0 : SCALE);
+    var footX = dir > 0 ? x + FOOT * SCALE : x + (W - FOOT) * SCALE;
+    var footY = HEADROOM + SCALE + spriteH;
+
+    if (alarm) {  // pixel "!" above the head
+      var ax = dir > 0 ? x + 19 * SCALE : x + 2 * SCALE;
+      ctx.fillStyle = darkQ.matches ? "#e8814d" : "#c2551f";
+      ctx.fillRect(ax, 0, SCALE, 3 * SCALE);
+      ctx.fillRect(ax, 4 * SCALE, SCALE, SCALE);
     }
+    if (tilt) {
+      ctx.translate(footX, footY);
+      ctx.rotate(dir * tilt * Math.PI / 180);
+      ctx.translate(-footX, -footY);
+    }
+    if (dir < 0) {  // mirror around the sprite's centre
+      ctx.translate(2 * x + spriteW, 0);
+      ctx.scale(-1, 1);
+    }
+    ctx.drawImage(bake(key), x, y, spriteW, spriteH);
   }
 
-  // Wanders back and forth inside the canvas: run, sit, run; turns at the edges.
-  var x = 0, dir = 1, phase = "run", phaseEnd = 0, sitStart = 0, last = 0;
+  // Phases: run -> (edge) sit | wobble -> run back; occasional sits mid-way.
+  var x = 0, dir = 1, phase = "run", phaseStart = 0, phaseEnd = 0, boostUntil = 0, last = 0;
+
+  function go(p, now, ms) { phase = p; phaseStart = now; phaseEnd = now + ms; }
 
   function tick(now) {
-    if (!last) { last = now; phaseEnd = now + rand(RUN_MS); }
+    if (!last) { last = now; go("run", now, rand(RUN_MS)); }
     var dt = Math.min(50, now - last) / 1000;
     last = now;
+    var t = now - phaseStart;
 
     if (phase === "run") {
-      x += dir * SPEED * dt;
-      if (x >= maxX) { x = maxX; dir = -1; }
-      if (x <= 0) { x = 0; dir = 1; }
-      draw(Math.floor(now / 120) % 2 ? "run1" : "run2", x, dir);
-      if (now > phaseEnd) { phase = "sit"; sitStart = now; phaseEnd = now + rand(SIT_MS); }
-    } else {
-      var t = now - sitStart;
+      var speed = SPEED * (now < boostUntil ? 1.7 : 1);
+      x += dir * speed * dt;
+      var atEdge = (dir > 0 && x >= maxX) || (dir < 0 && x <= 0);
+      if (atEdge) {
+        x = dir > 0 ? maxX : 0;
+        if (Math.random() < WOBBLE_CHANCE) go("wobble", now, WOBBLE_MS);
+        else go("sit", now, rand(SIT_MS));
+        draw("sit1", x, dir);
+      } else {
+        draw(Math.floor(now / 120) % 2 ? "run1" : "run2", x, dir);
+        if (now > phaseEnd) go("sit", now, rand(SIT_MS));
+      }
+    } else if (phase === "sit") {
       var flick = (t > 700 && t < 950) || (t > 1700 && t < 1950);
       draw(flick ? "sit2" : "sit1", x, dir);
       if (now > phaseEnd) {
-        phase = "run";
-        phaseEnd = now + rand(RUN_MS);
-        if (Math.random() < 0.3) dir = -dir;  // sometimes turn around after a rest
+        var edgeHere = x <= 0 || x >= maxX;
+        if (edgeHere || Math.random() < 0.25) dir = -dir;
+        go("run", now, rand(RUN_MS));
+      }
+    } else if (phase === "wobble") {
+      // Tips forward over the edge, windmills back and forth, then catches itself.
+      var tilt = 26 * Math.sin(2 * Math.PI * t / 460) * Math.exp(-t / 650);
+      var legs = t < 1100 ? (Math.floor(t / 70) % 2 ? "run1" : "run2") : "sit1";
+      draw(legs, x, dir, tilt, t > 80 && t < 1000);
+      if (now > phaseEnd) {
+        dir = -dir;
+        boostUntil = now + 1200;  // scurries away from the edge
+        go("run", now, rand(RUN_MS));
       }
     }
     requestAnimationFrame(tick);
@@ -170,13 +220,13 @@
 
   function start() {
     resize();
-    if (reduce.matches) { x = Math.min(maxX, 150); draw("sit1", x, 1); return; }
+    if (reduce.matches) { x = maxX; draw("sit1", x, 1); return; }
     requestAnimationFrame(tick);
   }
 
   window.addEventListener("resize", function () {
     resize();
-    if (reduce.matches) draw("sit1", x, 1);
+    if (reduce.matches) { x = maxX; draw("sit1", x, 1); }
   });
   darkQ.addEventListener && darkQ.addEventListener("change", function () { if (reduce.matches) draw("sit1", x, 1); });
 
