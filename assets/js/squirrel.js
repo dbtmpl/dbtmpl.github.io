@@ -1,7 +1,7 @@
 /*
  * Pixel-art squirrel that wanders back and forth along the top of the name.
- * It always stops at either end of the name; sometimes it loses its balance
- * at the edge, catches itself, and scurries back the other way. It also sits
+ * It always stops at either end of the name; sometimes it leans out over
+ * the edge, sways playfully, and then hops back the other way. It also sits
  * down now and then mid-way.
  * Honors prefers-reduced-motion (it just sits still).
  */
@@ -89,9 +89,9 @@
   var RUN_MS = [2500, 6000];  // run this long (random) before a stop mid-way
   var SIT_MS = [1800, 3800];  // sit this long (random)
   var WOBBLE_CHANCE = 0.35;   // chance to lose balance when reaching an edge
-  var WOBBLE_MS = 1600;
+  var WOBBLE_MS = 1800;
   var FOOT = 18.5;            // sprite column of the front feet (pivot for the wobble)
-  var HEADROOM = 10 * SCALE;  // room above the sprite for tilting and the "!"
+  var HEADROOM = 6 * SCALE;   // room above the sprite for tilting
 
   var canvas = document.getElementById("squirrel");
   if (!canvas) return;
@@ -144,7 +144,7 @@
   }
 
   // dir: 1 = facing right, -1 = facing left (mirrored). tilt: degrees, nose-down positive.
-  function draw(key, x, dir, tilt, alarm) {
+  function draw(key, x, dir, tilt) {
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.clearRect(0, 0, canvas.width, canvas.height);
     ctx.imageSmoothingEnabled = false;
@@ -154,12 +154,6 @@
     var footX = dir > 0 ? x + FOOT * SCALE : x + (W - FOOT) * SCALE;
     var footY = HEADROOM + SCALE + spriteH;
 
-    if (alarm) {  // pixel "!" above the head
-      var ax = dir > 0 ? x + 19 * SCALE : x + 2 * SCALE;
-      ctx.fillStyle = darkQ.matches ? "#e8814d" : "#c2551f";
-      ctx.fillRect(ax, 0, SCALE, 3 * SCALE);
-      ctx.fillRect(ax, 4 * SCALE, SCALE, SCALE);
-    }
     if (tilt) {
       ctx.translate(footX, footY);
       ctx.rotate(dir * tilt * Math.PI / 180);
@@ -184,7 +178,7 @@
     var t = now - phaseStart;
 
     if (phase === "run") {
-      var speed = SPEED * (now < boostUntil ? 1.7 : 1);
+      var speed = SPEED * (now < boostUntil ? 1.35 : 1);
       x += dir * speed * dt;
       var atEdge = (dir > 0 && x >= maxX) || (dir < 0 && x <= 0);
       if (atEdge) {
@@ -205,13 +199,13 @@
         go("run", now, rand(RUN_MS));
       }
     } else if (phase === "wobble") {
-      // Tips forward over the edge, windmills back and forth, then catches itself.
-      var tilt = 26 * Math.sin(2 * Math.PI * t / 460) * Math.exp(-t / 650);
-      var legs = t < 1100 ? (Math.floor(t / 70) % 2 ? "run1" : "run2") : "sit1";
-      draw(legs, x, dir, tilt, t > 80 && t < 1000);
+      // Leans out over the edge, sways gently a couple of times, then settles.
+      var tilt = 11 * Math.sin(2 * Math.PI * t / 900) * Math.exp(-t / 900);
+      var legs = t < 700 ? (Math.floor(t / 180) % 2 ? "run1" : "run2") : "sit1";
+      draw(legs, x, dir, tilt);
       if (now > phaseEnd) {
         dir = -dir;
-        boostUntil = now + 1200;  // scurries away from the edge
+        boostUntil = now + 900;   // hops off happily in the other direction
         go("run", now, rand(RUN_MS));
       }
     }
