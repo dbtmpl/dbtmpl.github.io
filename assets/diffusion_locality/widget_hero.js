@@ -5,11 +5,16 @@
   const K = window.DiffMemKit;
   if (!K) return;
 
-  const COND_ORDER = ["mnist_n2048", "mnist_n1024", "cifar10_n128"];
-  const COND_LABELS = {
-    mnist_n2048: "MNIST n=2048 (300k)",
-    mnist_n1024: "MNIST n=1024 (100k)",
-    cifar10_n128: "CIFAR-10 n=128 (300k)",
+  const COND_ORDER = ["mnist_n2048", "mnist_n1024", "cifar10_n128", "cifar10_n256"];
+  const DATASET_CONDS = {
+    mnist: [
+      { value: "mnist_n2048", label: "n = 2048 (300k)" },
+      { value: "mnist_n1024", label: "n = 1024 (100k)" },
+    ],
+    cifar10: [
+      { value: "cifar10_n128", label: "n = 128 (300k)" },
+      { value: "cifar10_n256", label: "n = 256 (300k)" },
+    ],
   };
   const THRESHOLD = 1 / 3;
 
@@ -67,10 +72,16 @@
     }
     return {
       idx: raw.idx,
-      d1: raw.d1,
-      d2: raw.d2,
-      ratio: raw.ratio,
+      origId: raw.orig_id ?? null,
+      label: raw.label || null,
+      d1: raw.d1 ?? null,
+      d2: raw.d2 ?? null,
+      ratio: raw.ratio ?? null,
       memorized: !!raw.memorized,
+      nnIdx: raw.nn_idx ?? null,
+      nnLabel: raw.nn_label || null,
+      nnB64: raw.nn_b64 || null,
+      nnBytes: raw.nn_b64 ? decodeB64(raw.nn_b64) : null,
       bytes,
       lum,
       mu: sum / nPix,
@@ -342,12 +353,14 @@
       const [C, H, W] = c.shape;
       condCache[key] = {
         raw: c,
+        dataset: c.dataset || (C === 3 ? "cifar10" : "mnist"),
         C,
         H,
         W,
         permObj: permCache[H * W],
         nat: c.nat_samples.map((s) => prepareSample(s, C, H, W)),
         perm: c.perm_samples.map((s) => prepareSample(s, C, H, W)),
+        train: (c.train_samples || []).map((s) => prepareSample(s, C, H, W)),
       };
     }
 
@@ -360,11 +373,13 @@
     const initStepIdx = Math.max(0, initCond.steps.indexOf(initCond.default_step));
 
     const state = {
+      dataset: "mnist",
       condKey: initKey,
       stepIdx: initStepIdx,
       scramble: 1.0,
-      sampleArm: "nat",
+      sampleArm: "nat", // "nat" | "perm" | "train"
       sampleIdx: 0,
+      customSample: null, // optional 1-NN training image override
       galleryView: "nat",
       hx: Math.floor(condCache[initKey].W / 2),
       hy: Math.floor(condCache[initKey].H / 2),
@@ -386,32 +401,65 @@
         }),
         K.el("p", {
           class: "viz-subtitle",
-          text: "Hover to trace a 5×5 convolutional patch across coordinate systems, scramble a real generated sample, and scrub training time to watch the d₁/d₂ distribution condense.",
+          text: "Switch between MNIST and CIFAR-10, hover to trace a 5×5 convolutional patch across coordinate systems, inspect real training vs. generated images, and scrub training steps to watch d₁/d₂ condense.",
         }),
       ]),
       headerBadge,
     ]);
 
-    const condSeg = K.makeSeg(
-      COND_ORDER.filter((k) => condCache[k]).map((k) => ({ value: k, label: COND_LABELS[k] })),
-      state.condKey,
-      (val) => {
-        stopPlay();
-        stopScrambleAnim();
-        state.condKey = val;
-        const cc = condCache[val];
-        const idx = cc.raw.steps.indexOf(cc.raw.default_step);
-        state.stepIdx = idx >= 0 ? idx : 0;
-        state.sampleArm = "nat";
-        state.sampleIdx = 0;
-        state.hx = Math.floor(cc.W / 2);
-        state.hy = Math.floor(cc.H / 2);
-        state.hoverArm = "nat";
-        state.hoveredBin = null;
-        syncStepSlider();
-        redrawAll();
+    function switchCondition(val) {
+      stopPlay();
+      stopScrambleAnim();
+      K.tooltip.hide();
+      state.condKey = val;
+      const cc = condCache[val];
+      state.dataset = cc.dataset;
+      const idx = cc.raw.steps.indexOf(cc.raw.default_step);
+      state.stepIdx = idx >= 0 ? idx : 0;
+      state.sampleArm = "nat";
+      state.sampleIdx = 0;
+      state.customSample = null;
+      state.hx = Math.floor(cc.W / 2);
+      state.hy = Math.floor(cc.H / 2);
+      state.hoverArm = "nat";
+      state.hoveredBin = null;
+      syncSubCondSeg();
+      syncStepSlider();
+      redrawAll();
+    }
+
+    // Prominent Top-Level Dataset Tabs: MNIST | CIFAR-10
+    const dsTabBtns = {};
+    const datasetTabs = K.el("div", { class: "hero-dataset-tabs", role: "tablist", "aria-label": "Dataset" }, [
+      ["mnist", "MNIST (28×28)"],
+      ["cifar10", "CIFAR-10 (32×32 RGB)"],
+    ].map(([dsKey, dsLabel]) => {
+      const btn = K.el("button", {
+        type: "button",
+        role: "tab",
+        "aria-pressed": dsKey === state.dataset ? "true" : "false",
+        text: dsLabel,
+        onClick: () => {
+          if (state.dataset === dsKey) return;
+          const opts = (DATASET_CONDS[dsKey] || []).filter((o) => condCache[o.value]);
+          if (opts.length) switchCondition(opts[0].value);
+        },
+      });
+      dsTabBtns[dsKey] = btn;
+      return btn;
+    }));
+
+    const subCondWrap = K.el("div", { class: "viz-control-group" });
+    function syncSubCondSeg() {
+      for (const [k, b] of Object.entries(dsTabBtns)) {
+        b.setAttribute("aria-pressed", k === state.dataset ? "true" : "false");
       }
-    );
+      K.clear(subCondWrap);
+      subCondWrap.appendChild(K.el("span", { class: "viz-control-label", text: "Subset" }));
+      const opts = (DATASET_CONDS[state.dataset] || []).filter((o) => condCache[o.value]);
+      subCondWrap.appendChild(K.makeSeg(opts, state.condKey, (val) => switchCondition(val)));
+    }
+    syncSubCondSeg();
 
     const scrambleSlider = K.el("input", {
       type: "range",
@@ -449,19 +497,19 @@
       class: "viz-btn viz-btn--primary",
     });
 
-    const controls = K.el("div", { class: "viz-controls" }, [
-      K.el("div", { class: "viz-control-group" }, [
-        K.el("span", { class: "viz-control-label", text: "Condition" }),
-        condSeg,
-      ]),
-      K.el("div", { class: "viz-slider-wrap" }, [
+    const topBar = K.el("div", {
+      style: "display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:10px 14px;margin-bottom:10px;",
+    }, [datasetTabs, subCondWrap]);
+
+    const controls = K.el("div", { class: "viz-controls hero-sliders-row" }, [
+      K.el("div", { class: "viz-slider-wrap", style: "flex:1 1 360px;" }, [
         K.el("span", { class: "viz-control-label", text: "Scramble" }),
         scrambleSlider,
         scrambleReadout,
         animScrambleBtn,
         resetBtn,
       ]),
-      K.el("div", { class: "viz-slider-wrap" }, [
+      K.el("div", { class: "viz-slider-wrap", style: "flex:1 1 360px;" }, [
         K.el("span", { class: "viz-control-label", text: "Step" }),
         stepSlider,
         stepReadout,
@@ -469,7 +517,7 @@
       ]),
     ]);
 
-    // Left panel: Dual canvases + 5x5 loupe + 3 stats
+    // Left panel: Dual canvases + 5x5 loupe + 3 stats + 1-NN training match strip
     const leftTitleTag = K.el("span", { class: "hero-canvas-sub" });
     const natCanvas = K.el("canvas", { "aria-label": "Sample in natural pixel coordinates" });
     const permCanvas = K.el("canvas", { "aria-label": "Sample in morphed or permuted pixel coordinates" });
@@ -480,7 +528,30 @@
     const statCorrVal = K.el("div", { class: "viz-stat__v" });
     const statL2Val = K.el("div", { class: "viz-stat__v" });
     const statL2Key = K.el("div", { class: "viz-stat__k", text: "L2 dist ||x − y||₂" });
+    const statRatioKey = K.el("div", { class: "viz-stat__k", text: "Sample d₁/d₂" });
     const statRatioVal = K.el("div", { class: "viz-stat__v" });
+
+    const nnCanvas = K.el("canvas", { "aria-label": "Nearest training image" });
+    const nnMeta = K.el("div", { class: "hero-nn-strip__meta" });
+    const nnInspectBtn = K.el("button", {
+      type: "button",
+      class: "viz-btn",
+      style: "font-size:11.5px;padding:4px 9px;white-space:nowrap;",
+      text: "Inspect 1-NN",
+      onClick: () => {
+        const { cc, sample } = activeSample();
+        if (!sample || !sample.nnB64) return;
+        state.customSample = prepareSample(
+          { idx: sample.nnIdx, label: sample.nnLabel, b64: sample.nnB64 },
+          cc.C,
+          cc.H,
+          cc.W
+        );
+        updateGallerySelection();
+        redrawLeftSide();
+      },
+    });
+    const nnStrip = K.el("div", { class: "hero-nn-strip" }, [nnCanvas, nnMeta, nnInspectBtn]);
 
     const leftPanel = K.el("div", { class: "viz-panel" }, [
       K.el("div", { class: "viz-panel-title" }, [
@@ -505,11 +576,9 @@
           statCorrVal,
         ]),
         K.el("div", { class: "viz-stat" }, [statL2Key, statL2Val]),
-        K.el("div", { class: "viz-stat" }, [
-          K.el("div", { class: "viz-stat__k", text: "Sample d₁/d₂" }),
-          statRatioVal,
-        ]),
+        K.el("div", { class: "viz-stat" }, [statRatioKey, statRatioVal]),
       ]),
+      nnStrip,
     ]);
 
     // Right panel: SVG density plot + legend + 4 stats
@@ -572,12 +641,14 @@
     );
     const natArmLabel = K.el("div", { class: "hero-gallery-arm", text: "Natural U-Net" });
     const permArmLabel = K.el("div", { class: "hero-gallery-arm", text: "Permuted U-Net" });
+    const trainArmLabel = K.el("div", { class: "hero-gallery-arm", text: "Training Set" });
     const natGalleryRow = K.el("div", { class: "hero-gallery-row" }, [natArmLabel]);
     const permGalleryRow = K.el("div", { class: "hero-gallery-row" }, [permArmLabel]);
+    const trainGalleryRow = K.el("div", { class: "hero-gallery-row" }, [trainArmLabel]);
 
-    const tileRegistry = { nat: [], perm: [] };
-    for (const arm of ["nat", "perm"]) {
-      const row = arm === "nat" ? natGalleryRow : permGalleryRow;
+    const tileRegistry = { nat: [], perm: [], train: [] };
+    for (const arm of ["nat", "perm", "train"]) {
+      const row = arm === "nat" ? natGalleryRow : arm === "perm" ? permGalleryRow : trainGalleryRow;
       for (let i = 0; i < 8; i++) {
         const cvs = K.el("canvas");
         const dot = K.el("span", { class: "hero-sample-dot" });
@@ -589,8 +660,10 @@
           type: "button",
           class: "hero-sample-tile",
           onClick: () => {
+            K.tooltip.hide();
             state.sampleArm = arm;
             state.sampleIdx = i;
+            state.customSample = null;
             updateGallerySelection();
             redrawLeftSide();
           },
@@ -599,20 +672,31 @@
         const showTileTip = (e) => {
           const cc = condCache[state.condKey];
           const s = cc[arm][i];
+          if (!s) return;
           const T = K.theme();
-          const armName = arm === "nat" ? "Natural U-Net" : "Permuted U-Net";
-          const armCol = arm === "nat" ? T.nat : T.perm;
-          const html =
-            `<div class="viz-tooltip__title">${armName} · Sample #${s.idx}</div>` +
-            K.tipRow("d₁ (1-NN)", s.d1.toFixed(2), armCol) +
-            K.tipRow("d₂ (2-NN)", s.d2.toFixed(2)) +
-            K.tipRow("Ratio d₁/d₂", s.ratio.toFixed(3)) +
-            K.tipRow("Status", s.memorized ? "Memorised (< 1/3)" : "Novel (≥ 1/3)", s.memorized ? T.gold : T.muted);
-          K.tooltip.show(e.clientX, e.clientY, html);
+          let html;
+          if (arm === "train") {
+            html =
+              `<div class="viz-tooltip__title">Training Image · #${s.idx} (${s.label})</div>` +
+              K.tipRow("Dataset ID", `#${s.origId ?? s.idx}`) +
+              K.tipRow("Role", "Exact image in training subset", T.nat);
+          } else {
+            const armName = arm === "nat" ? "Natural U-Net" : "Permuted U-Net";
+            const armCol = arm === "nat" ? T.nat : T.perm;
+            html =
+              `<div class="viz-tooltip__title">${armName} · Sample #${s.idx}</div>` +
+              K.tipRow("d₁ (1-NN)", s.d1.toFixed(2), armCol) +
+              K.tipRow("d₂ (2-NN)", s.d2.toFixed(2)) +
+              K.tipRow("Ratio d₁/d₂", s.ratio.toFixed(3)) +
+              (s.nnLabel ? K.tipRow("Nearest train", `#${s.nnIdx} (${s.nnLabel})`) : "") +
+              K.tipRow("Status", s.memorized ? "Memorised (< 1/3)" : "Novel (≥ 1/3)", s.memorized ? T.gold : T.muted);
+          }
+          K.tooltip.show(e.clientX, e.clientY, html, btn);
         };
         btn.addEventListener("mouseenter", showTileTip);
         btn.addEventListener("mousemove", showTileTip);
         btn.addEventListener("mouseleave", () => K.tooltip.hide());
+        btn.addEventListener("blur", () => K.tooltip.hide());
 
         row.appendChild(btn);
         tileRegistry[arm].push({ btn, cvs, dot, ratioEl });
@@ -631,6 +715,7 @@
       ]),
       natGalleryRow,
       permGalleryRow,
+      trainGalleryRow,
     ]);
 
     const figcaption = K.el("div", { class: "viz-figcaption" }, [
@@ -647,6 +732,7 @@
     ]);
 
     container.appendChild(header);
+    container.appendChild(topBar);
     container.appendChild(controls);
     container.appendChild(mainGrid);
     container.appendChild(gallery);
@@ -655,10 +741,21 @@
     // ---------- Helpers & Interactive Event Wiring ----------
     function activeSample() {
       const cc = condCache[state.condKey];
+      if (state.customSample) {
+        return {
+          cc,
+          sample: state.customSample,
+          partner: cc.train[0] || cc.nat[0],
+          isTrain: true,
+        };
+      }
+      const list = cc[state.sampleArm] && cc[state.sampleArm].length ? cc[state.sampleArm] : cc.nat;
+      const idx = clamp(state.sampleIdx, 0, list.length - 1);
       return {
         cc,
-        sample: cc[state.sampleArm][state.sampleIdx],
-        partner: cc[state.sampleArm][(state.sampleIdx + 1) % cc[state.sampleArm].length],
+        sample: list[idx],
+        partner: list[(idx + 1) % list.length],
+        isTrain: state.sampleArm === "train",
       };
     }
 
@@ -740,7 +837,7 @@
 
     function redrawCanvasesAndLeftStats() {
       const T = K.theme();
-      const { cc, sample, partner } = activeSample();
+      const { cc, sample, partner, isTrain } = activeSample();
       const { C, H, W, permObj } = cc;
       const perm = permObj.fwd;
       const invPerm = permObj.inv;
@@ -817,7 +914,9 @@
           pct === 0 ? "Identical grid" : pct === 100 ? "25 shattered pixels" : "Pixels in flight";
       }
 
-      leftTitleTag.textContent = `${state.sampleArm === "nat" ? "Nat" : "Perm"} #${sample.idx} · ${K.fmtSteps(cc.raw.samples_step)}`;
+      leftTitleTag.textContent = isTrain
+        ? `Train #${sample.idx}${sample.label ? ` (${sample.label})` : ""}`
+        : `${state.sampleArm === "nat" ? "Nat" : "Perm"} #${sample.idx} · ${K.fmtSteps(cc.raw.samples_step)}`;
 
       // Stat 1: Patch corr (5x5)
       K.clear(statCorrVal);
@@ -837,17 +936,40 @@
         })
       );
 
-      // Stat 3: Sample d1/d2 + status badge
+      // Stat 3: Sample d1/d2 + status badge OR Training image label
       K.clear(statRatioVal);
-      statRatioVal.appendChild(K.el("span", { text: `${sample.ratio.toFixed(3)} ` }));
-      const memBadge = K.el("span", {
-        class: "viz-badge",
-        style: sample.memorized
-          ? `padding:1px 6px;font-size:10.5px;color:${T.gold};border-color:${hexOrCssToRgba(T.gold, 0.5)};background:${hexOrCssToRgba(T.gold, 0.12)}`
-          : `padding:1px 6px;font-size:10.5px;color:${T.muted};`,
-        text: sample.memorized ? "Mem." : "Novel",
-      });
-      statRatioVal.appendChild(memBadge);
+      if (isTrain || sample.ratio === null) {
+        statRatioKey.textContent = "Training image";
+        statRatioVal.appendChild(K.el("span", { style: `color:${T.nat}`, text: sample.label || `#${sample.idx}` }));
+        nnStrip.style.display = "none";
+      } else {
+        statRatioKey.textContent = "Sample d₁/d₂";
+        statRatioVal.appendChild(K.el("span", { text: `${sample.ratio.toFixed(3)} ` }));
+        const memBadge = K.el("span", {
+          class: "viz-badge",
+          style: sample.memorized
+            ? `padding:1px 6px;font-size:10.5px;color:${T.gold};border-color:${hexOrCssToRgba(T.gold, 0.5)};background:${hexOrCssToRgba(T.gold, 0.12)}`
+            : `padding:1px 6px;font-size:10.5px;color:${T.muted};`,
+          text: sample.memorized ? "Mem." : "Novel",
+        });
+        statRatioVal.appendChild(memBadge);
+
+        if (sample.nnBytes) {
+          nnStrip.style.display = "flex";
+          renderGridToCanvas(nnCanvas, { bytes: sample.nnBytes }, C, H, W, null, offscreen, 40);
+          K.clear(nnMeta);
+          nnMeta.appendChild(K.el("div", {
+            style: "font-weight:600;color:var(--text);",
+            text: `Nearest training image: #${sample.nnIdx} (${sample.nnLabel})`,
+          }));
+          nnMeta.appendChild(K.el("div", {
+            style: "color:var(--muted);font-family:var(--mono);font-size:11px;",
+            text: `d₁ = ${sample.d1.toFixed(2)} · d₂ = ${sample.d2.toFixed(2)} · ${sample.memorized ? "memorised copy" : "novel generation"}`,
+          }));
+        } else {
+          nnStrip.style.display = "none";
+        }
+      }
     }
 
     function redrawDensityChart() {
@@ -1107,9 +1229,9 @@
     }
 
     function updateGallerySelection() {
-      for (const arm of ["nat", "perm"]) {
+      for (const arm of ["nat", "perm", "train"]) {
         for (let i = 0; i < 8; i++) {
-          const active = state.sampleArm === arm && state.sampleIdx === i;
+          const active = !state.customSample && state.sampleArm === arm && state.sampleIdx === i;
           tileRegistry[arm][i].btn.classList.toggle("is-selected", active);
           tileRegistry[arm][i].btn.setAttribute("aria-pressed", active ? "true" : "false");
         }
@@ -1122,24 +1244,37 @@
       const { C, H, W, permObj } = cc;
       const perm = state.galleryView === "perm" ? permObj.fwd : null;
 
-      galleryTitle.textContent = `Real generated samples at ${K.fmtSteps(cc.raw.samples_step)} (sorted by d₁/d₂ — click to inspect)`;
+      galleryTitle.textContent = `Generated samples at ${K.fmtSteps(cc.raw.samples_step)} & real training images (click any tile to inspect)`;
       natArmLabel.style.color = T.nat;
       permArmLabel.style.color = T.perm;
+      trainArmLabel.style.color = T.muted;
 
-      for (const arm of ["nat", "perm"]) {
-        const list = cc[arm];
+      for (const arm of ["nat", "perm", "train"]) {
+        const list = cc[arm] || [];
         for (let i = 0; i < 8; i++) {
           const s = list[i];
           const reg = tileRegistry[arm][i];
+          if (!s) {
+            reg.btn.style.display = "none";
+            continue;
+          }
+          reg.btn.style.display = "";
           renderGridToCanvas(reg.cvs, s, C, H, W, perm, offscreen, 72);
-          reg.dot.style.background = s.memorized ? T.gold : "transparent";
-          reg.dot.style.borderColor = s.memorized ? T.surface : hexOrCssToRgba(T.muted, 0.55);
-          reg.dot.title = s.memorized ? "Memorised (d₁/d₂ < 1/3)" : "Novel (d₁/d₂ ≥ 1/3)";
-          reg.ratioEl.textContent = s.ratio.toFixed(3);
-          reg.btn.setAttribute(
-            "aria-label",
-            `${arm === "nat" ? "Natural" : "Permuted"} sample #${s.idx}, d1/d2 ${s.ratio.toFixed(3)}`
-          );
+          if (arm === "train") {
+            reg.dot.style.display = "none";
+            reg.ratioEl.textContent = s.label || `#${s.idx}`;
+            reg.btn.setAttribute("aria-label", `Training image #${s.idx}, ${s.label || ""}`);
+          } else {
+            reg.dot.style.display = "";
+            reg.dot.style.background = s.memorized ? T.gold : "transparent";
+            reg.dot.style.borderColor = s.memorized ? T.surface : hexOrCssToRgba(T.muted, 0.55);
+            reg.dot.title = s.memorized ? "Memorised (d₁/d₂ < 1/3)" : "Novel (d₁/d₂ ≥ 1/3)";
+            reg.ratioEl.textContent = s.ratio.toFixed(3);
+            reg.btn.setAttribute(
+              "aria-label",
+              `${arm === "nat" ? "Natural" : "Permuted"} sample #${s.idx}, d1/d2 ${s.ratio.toFixed(3)}`
+            );
+          }
         }
       }
       updateGallerySelection();
@@ -1281,6 +1416,7 @@
     syncStepSlider();
     redrawAll();
     K.mountResponsive(container, redrawAll);
+    if (typeof K.observeAutoHide === "function") K.observeAutoHide(container);
   }
 
   window.DiffMemWidgets = window.DiffMemWidgets || {};

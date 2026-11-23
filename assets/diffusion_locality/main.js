@@ -14,10 +14,13 @@
   async function boot() {
     const ids = [
       "viz-hero",
+      "viz-arch-unet",
       "viz-ls",
       "viz-capacity",
       "viz-speed",
       "viz-delta-rho",
+      "viz-arch-dit",
+      "viz-cifar-train",
       "viz-scale-arch",
     ];
     ids.forEach((id) => setStatus(id, "Loading experimental data…"));
@@ -41,10 +44,13 @@
     const W = window.DiffMemWidgets || {};
     const mounts = [
       ["viz-hero", W.mountHero],
+      ["viz-arch-unet", W.mountArchUnet],
       ["viz-ls", W.mountLS],
       ["viz-capacity", W.mountCapacity],
       ["viz-speed", W.mountSpeed],
       ["viz-delta-rho", W.mountDeltaRho],
+      ["viz-arch-dit", W.mountArchDit],
+      ["viz-cifar-train", W.mountCifarTrain],
       ["viz-scale-arch", W.mountScaleArch],
     ];
 

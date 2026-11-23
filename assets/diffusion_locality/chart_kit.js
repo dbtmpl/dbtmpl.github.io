@@ -281,19 +281,37 @@
     });
   }
 
-  // Singleton Tooltip
+  // Singleton Tooltip with automatic hide on scroll/wheel/Escape/offscreen
   let tipNode = null;
+  let tipOwner = null;
+  let tipListenersBound = false;
+
   function ensureTip() {
     if (!tipNode) {
       tipNode = el("div", { class: "viz-tooltip", role: "tooltip" });
       document.body.appendChild(tipNode);
     }
+    if (!tipListenersBound) {
+      tipListenersBound = true;
+      const dismiss = () => tooltip.hide();
+      window.addEventListener("scroll", dismiss, { passive: true });
+      document.addEventListener("scroll", dismiss, { passive: true, capture: true });
+      window.addEventListener("wheel", dismiss, { passive: true });
+      window.addEventListener("resize", dismiss, { passive: true });
+      document.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") dismiss();
+      });
+      document.addEventListener("pointerdown", (e) => {
+        if (tipOwner && !tipOwner.contains(e.target)) dismiss();
+      });
+    }
     return tipNode;
   }
 
   const tooltip = {
-    show(clientX, clientY, html) {
+    show(clientX, clientY, html, ownerEl) {
       const node = ensureTip();
+      tipOwner = ownerEl || null;
       node.innerHTML = html;
       node.classList.add("is-visible");
       const pad = 12;
@@ -310,9 +328,26 @@
       node.style.top = `${Math.round(top)}px`;
     },
     hide() {
+      tipOwner = null;
       if (tipNode) tipNode.classList.remove("is-visible");
     },
   };
+
+  function observeAutoHide(container) {
+    if (!container || typeof IntersectionObserver === "undefined") return;
+    const io = new IntersectionObserver(
+      (entries) => {
+        for (const entry of entries) {
+          if (!entry.isIntersecting || entry.intersectionRatio < 0.05) {
+            tooltip.hide();
+          }
+        }
+      },
+      { threshold: [0, 0.05] }
+    );
+    io.observe(container);
+    return () => io.disconnect();
+  }
 
   function tipRow(label, value, color) {
     const dot = color ? `<span class="viz-tooltip__dot" style="background:${color}"></span>` : "";
@@ -380,6 +415,7 @@
       a.addEventListener("mouseleave", hide);
       a.addEventListener("blur", hide);
     });
+    window.addEventListener("scroll", () => pop.classList.remove("is-visible"), { passive: true });
   }
 
   window.DiffMemKit = {
@@ -397,6 +433,7 @@
     tipRow,
     makeSeg,
     mountResponsive,
+    observeAutoHide,
     initCitations,
     fmtSteps: (s) => (s >= 1000 ? `${Math.round(s / 1000)}k` : String(s)),
   };

@@ -661,8 +661,477 @@ details.deep-dive[open] summary {
   background-repeat: no-repeat;
 }
 
+/* ---------- Hero Dataset Tabs & 1-NN Match Strip ---------- */
+.hero-dataset-tabs {
+  display: inline-flex;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 10px;
+  background: var(--viz-card-alt);
+  border: 1px solid var(--border);
+  margin-bottom: 0;
+}
+
+.hero-sliders-row .viz-btn {
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.hero-dataset-tabs button {
+  appearance: none;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--muted);
+  font: 600 13.5px/1.2 var(--sans);
+  padding: 7px 14px;
+  border-radius: 7px;
+  cursor: pointer;
+  transition: background-color 0.14s, color 0.14s, border-color 0.14s;
+}
+
+.hero-dataset-tabs button:hover {
+  color: var(--text);
+}
+
+.hero-dataset-tabs button[aria-pressed="true"] {
+  background: var(--surface);
+  color: var(--text);
+  border-color: var(--border);
+  box-shadow: 0 1px 4px var(--shadow);
+}
+
+.hero-nn-strip {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 10px;
+  padding: 8px 10px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 12px;
+}
+
+.hero-nn-strip canvas {
+  width: 40px;
+  height: 40px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  image-rendering: pixelated;
+  flex-shrink: 0;
+}
+
+.hero-nn-strip__meta {
+  flex: 1;
+  min-width: 0;
+  line-height: 1.35;
+}
+
+/* ---------- Architecture Data-Flow Figures (U-Net & DiT) ---------- */
+.arch-flow-grid {
+  display: grid;
+  grid-template-columns: 148px 148px minmax(0, 1fr) 168px;
+  gap: 12px;
+  align-items: stretch;
+}
+
+.arch-stage {
+  background: var(--viz-card-alt);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 10px 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.arch-stage--core {
+  background: var(--surface);
+}
+
+.arch-stage__head {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text);
+  line-height: 1.25;
+}
+
+.arch-stage__num {
+  width: 19px;
+  height: 19px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--mono);
+  font-size: 10.5px;
+  font-weight: 700;
+  background: var(--viz-nat-soft);
+  color: var(--viz-nat);
+  flex-shrink: 0;
+}
+
+.arch-stage__num--diff {
+  background: color-mix(in srgb, var(--viz-gold) 20%, transparent);
+  color: var(--viz-gold);
+}
+
+.arch-img-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px;
+  text-align: center;
+  transition: opacity 0.16s ease;
+}
+
+.arch-img-card--nat {
+  border-top: 2.5px solid var(--viz-nat);
+}
+
+.arch-img-card--perm {
+  border-top: 2.5px solid var(--viz-perm);
+}
+
+.arch-canvas {
+  display: block;
+  width: 88px;
+  height: 88px;
+  margin: 0 auto;
+  border-radius: 4px;
+  image-rendering: pixelated;
+  border: 1px solid var(--border);
+}
+
+.arch-canvas--sm {
+  width: 72px;
+  height: 72px;
+}
+
+.arch-canvas--mini {
+  width: 48px;
+  height: 48px;
+}
+
+.arch-img-cap {
+  margin-top: 5px;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.arch-img-cap strong {
+  color: var(--text);
+}
+
+.arch-img-cap span {
+  color: var(--muted);
+  font-size: 10px;
+}
+
+.arch-op-pill {
+  font-size: 10.5px;
+  font-weight: 600;
+  text-align: center;
+  padding: 4px 6px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px dashed var(--border);
+  color: var(--muted);
+  line-height: 1.3;
+}
+
+.arch-formula-pill {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  text-align: center;
+  padding: 5px 6px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.arch-snr-wrap {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.arch-snr-track {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--viz-perm-soft);
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.arch-snr-fill {
+  height: 100%;
+  background: var(--viz-nat);
+  transition: width 0.1s linear;
+}
+
+.arch-formula-sub {
+  font-family: var(--mono);
+  font-size: 9.8px;
+  color: var(--muted);
+  text-align: center;
+}
+
+.arch-svg-wrap {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.arch-loss-box,
+.arch-ddim-box {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 7px 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+}
+
+.arch-loss-title {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: var(--muted);
+  text-align: center;
+}
+
+.arch-ddim-sub {
+  font-size: 10.5px;
+  color: var(--muted);
+  text-align: center;
+  line-height: 1.35;
+}
+
+.arch-mini-pair {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 2px;
+}
+
+.arch-mini-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 9.8px;
+  color: var(--muted);
+}
+
+.arch-token-strip {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 4px;
+}
+
+.arch-tok-chip {
+  font-family: var(--mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 5px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.arch-tok-chip--hi {
+  background: var(--viz-nat-soft);
+  border-color: var(--viz-nat);
+  color: var(--viz-nat);
+  font-weight: 700;
+}
+
+/* ---------- CIFAR-10 Training Images Showcase (#viz-cifar-train) ---------- */
+.cifar-cls-chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.cifar-cls-chip {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  background: var(--viz-card-alt);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.cifar-train-grid {
+  display: grid;
+  grid-template-columns: repeat(8, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.cifar-train-grid--both {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
+.cifar-train-card {
+  background: var(--viz-card-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 6px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+  transition: border-color 0.14s, transform 0.14s;
+}
+
+.cifar-train-card:hover {
+  border-color: var(--accent);
+  transform: translateY(-1px);
+}
+
+.cifar-train-canvases {
+  display: flex;
+  gap: 4px;
+  width: 100%;
+  justify-content: center;
+}
+
+.cifar-train-cvs {
+  width: 100%;
+  max-width: 76px;
+  aspect-ratio: 1 / 1;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  image-rendering: pixelated;
+  display: block;
+}
+
+.cifar-train-grid--both .cifar-train-cvs {
+  width: calc(50% - 2px);
+  max-width: 82px;
+}
+
+.cifar-train-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  width: 100%;
+  font-size: 11px;
+  line-height: 1.2;
+}
+
+.cifar-train-meta span {
+  font-family: var(--mono);
+  font-size: 10px;
+  color: var(--muted);
+}
+
+.cifar-nn-section {
+  margin-top: 14px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.cifar-nn-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.cifar-nn-card {
+  background: var(--viz-card-alt);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.cifar-nn-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px;
+  border-radius: 6px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+}
+
+.cifar-nn-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  font-size: 9.5px;
+  color: var(--muted);
+}
+
+.cifar-nn-cvs {
+  width: 48px;
+  height: 48px;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  image-rendering: pixelated;
+}
+
+.cifar-nn-arrow {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.cifar-nn-metrics {
+  margin-left: auto;
+  text-align: right;
+  font-size: 11px;
+  line-height: 1.3;
+}
+
+@media (max-width: 920px) {
+  .arch-flow-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  .arch-stage--core {
+    grid-column: 1 / -1;
+  }
+  .cifar-train-grid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .cifar-train-grid--both {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cifar-nn-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 /* ---------- Responsive ---------- */
 @media (max-width: 760px) {
+  .arch-flow-grid {
+    grid-template-columns: 1fr;
+  }
+  .cifar-train-grid,
+  .cifar-train-grid--both {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .cifar-nn-grid {
+    grid-template-columns: 1fr;
+  }
   .viz-breakout {
     width: calc(100vw - 16px);
     padding: 14px 12px;

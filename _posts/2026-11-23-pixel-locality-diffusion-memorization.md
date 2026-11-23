@@ -4,6 +4,7 @@ title: "What Happens When You Scramble the Pixels of a Diffusion Model?"
 description: "Using a fixed random pixel permutation to separate spatial locality from data geometry in diffusion memorisation — what happens to capacity, why memorisation slows down by ~2×, and how fixed-budget comparisons mix speed with capacity."
 kicker: Research note
 date: 2026-11-23
+image: /assets/diffusion_locality/preview.png
 math: true
 asset_base: /assets/diffusion_locality/
 custom_css:
@@ -11,6 +12,7 @@ custom_css:
 custom_js:
   - /assets/diffusion_locality/chart_kit.js
   - /assets/diffusion_locality/widget_hero.js
+  - /assets/diffusion_locality/widget_arch.js
   - /assets/diffusion_locality/widget_ls_metric.js
   - /assets/diffusion_locality/widget_capacity_speed.js
   - /assets/diffusion_locality/widget_scaling_arch.js
@@ -90,6 +92,10 @@ $$
 $$
 
 where $$n^*$$ is the training-set size at which the memorised fraction $$m(n)$$ crosses $$0.5$$ (measured in octaves, i.e. doublings of $$n$$).
+
+To make the data flow concrete before looking at the curves, the interactive schematic below traces a real CIFAR-10 training image before and after permutation $$P$$ through the forward diffusion noising step, the purely convolutional U-Net denoiser $$\hat\varepsilon_\theta(x_t, t)$$, and the reverse DDIM-50 sampling loop.
+
+<div class="viz-breakout" id="viz-arch-unet"></div>
 
 What about a purely architectural square-patch local-score model? Before touching a GPU neural network, we built a network-free square-patch LS model following Kamb &amp; Ganguli.<sup class="cite"><a href="#ref-3">[3]</a></sup> We calibrated its noise-dependent square patch width $$L(t)$$ by minimising held-out denoising MSE on natural MNIST ($$n_{\text{ref}} = 10^4$$), then froze $$L(t)$$ and ran DDIM sampling in both natural and permuted pixel grids.
 
@@ -188,16 +194,23 @@ On MNIST, the local log-log slope $$a = \mathrm{d}\log_2 \tau_{\text{nat}} / \ma
 
 Once the MNIST/FashionMNIST picture became clear, we ran three **single-seed exploratory** scale-outs to probe how architectural locality and capacity interact. Treat every trend in this section as a preliminary clue rather than a replicated verdict.
 
-1. **Varying U-Net width (`1.15M` → `3.83M` → `14.19M` params, MNIST).**
-   Natural onset grows at $$+1.12$$ and $$+0.84$$ octaves per width doubling ($$\log_2 n^*_{\text{nat}} = 10.30 \to 11.42 \to 12.26$$), closely matching the $$\tau_{\text{mem}} \propto n W^{-1}$$ scaling shown by Bonnaire et al.,<sup class="cite"><a href="#ref-13">[13]</a></sup> which predicts $$n^* \propto W$$ ($$+1$$ octave per doubling) at fixed budget. What stood out in our sweep is that the permutation slowdown *shrinks sharply with width*: mean $$\rho$$ falls from $$1.08$$ ($$\times\tfrac{1}{2}$$) to $$0.93$$ ($$\times 1$$) to $$0.26$$ ($$\times 2$$), while $$\Delta(100\text{k})$$ tracks it via $$-\rho/a$$ ($$-0.65 \to -0.35 \to +0.05$$). One tempting physical interpretation is that the convolutional prior acts mainly as an optimisation crutch for capacity-constrained networks, whereas a 14.2M-parameter U-Net has enough channels to fit scrambled images nearly as fast as natural ones. Because this sweep uses one seed per width across different $$n$$ ranges ($$256\text{--}512$$ at $$\times\tfrac{1}{2}$$ vs. $$1024\text{--}4096$$ at $$\times 2$$) — with capacity formally `INCONCLUSIVE` at $$\times\tfrac{1}{2}$$, speed formally `INCONCLUSIVE` at $$\times 2$$, and fast memorisation at $$\times 2$$ pushing $$\tau_{\text{nat}}$$ close to our earliest evaluation grids — it needs matched-$$n$$ replicates before drawing firm conclusions.
+### 5.1 Varying U-Net width (`1.15M` → `3.83M` → `14.19M` params, MNIST)
 
-2. **Dialling locality in Diffusion Transformers (DiTs, ~4.7M params, MNIST).**
-   Inspired by An et al.<sup class="cite"><a href="#ref-20">[20]</a></sup>, we trained adaLN-Zero DiTs (width 192, depth 6) with fixed 2D sin-cos positions while varying patch size $$p \in \{2, 4\}$$ alongside our exact-equivariant $$p = 1$$ learned-position null. Notice the ordering of the slowdown:
-   $$\text{U-Net } (0.93) \;>\; \text{DiT } p=2 \; (0.55) \;>\; \text{DiT } p=4 \; (\approx -0.25) \;\approx\; \text{DiT } p=1 \; (0 \text{ exact}).$$
-   Capacity stays inside the NO SHIFT band for both DiTs ($$\Delta = -0.39$$ for $$p=2$$; $$+0.04$$ for $$p=4$$). **Important caveats:** One seed per DiT; $$\rho$$ rests on just two points ($$n = 128, 256$$, where $$n = 128$$ was added post hoc in Amendment 10 after the initial grid came back `UNDEFINED`); the DiTs used the U-Net's untuned optimiser schedule (AdamW `lr = 2e-4`, 100k steps); and although the DiTs' fixed-budget $$n^*$$ sits ~2.8 octaves lower than the U-Net's, Section 4's exact warning forbids treating fixed-budget $$n^*$$ across architectures as a pure capacity comparison!
+Natural onset grows at $$+1.12$$ and $$+0.84$$ octaves per width doubling ($$\log_2 n^*_{\text{nat}} = 10.30 \to 11.42 \to 12.26$$), closely matching the $$\tau_{\text{mem}} \propto n W^{-1}$$ scaling shown by Bonnaire et al.,<sup class="cite"><a href="#ref-13">[13]</a></sup> which predicts $$n^* \propto W$$ ($$+1$$ octave per doubling) at fixed budget. What stood out in our sweep is that the permutation slowdown *shrinks sharply with width*: mean $$\rho$$ falls from $$1.08$$ ($$\times\tfrac{1}{2}$$) to $$0.93$$ ($$\times 1$$) to $$0.26$$ ($$\times 2$$), while $$\Delta(100\text{k})$$ tracks it via $$-\rho/a$$ ($$-0.65 \to -0.35 \to +0.05$$). One tempting physical interpretation is that the convolutional prior acts mainly as an optimisation crutch for capacity-constrained networks, whereas a 14.2M-parameter U-Net has enough channels to fit scrambled images nearly as fast as natural ones. Because this sweep uses one seed per width across different $$n$$ ranges ($$256\text{--}512$$ at $$\times\tfrac{1}{2}$$ vs. $$1024\text{--}4096$$ at $$\times 2$$) — with capacity formally `INCONCLUSIVE` at $$\times\tfrac{1}{2}$$, speed formally `INCONCLUSIVE` at $$\times 2$$, and fast memorisation at $$\times 2$$ pushing $$\tau_{\text{nat}}$$ close to our earliest evaluation grids — it needs matched-$$n$$ replicates before drawing firm conclusions.
 
-3. **CIFAR-10 at 100k → 300k (32×32 colour images, `3.8M` U-Net).**
-   At 100k steps, CIFAR-10 repeats the pattern: $$\Delta(100\text{k}) = -0.48$$ (`NO SHIFT`, though sitting just $$0.02$$ inside the $$0.5$$ border) and mean $$\rho = 0.94$$ (`SPEED EFFECT`). Extending $$n \in \{128, 256, 512\}$$ to 300k largely closes the suspicious `0.70` vs `1.00` gap at $$n=128$$ (reaching `0.93` vs `1.00`, gap `0.07`), yet $$n = 256$$ levels out at `0.80` vs `0.98` (gap `0.18`, late slope `+0.015`, formally `INCONCLUSIVE`). **Two important caveats:** no CIFAR-10 MLP null was run, and our CIFAR permutation shuffled the 1,024 pixel positions while **keeping each pixel's `(R, G, B)` triplet together** — preserving strong cross-channel colour correlations for the first convolution! A cleaner follow-up should permute all 3,072 scalar coordinates independently.
+### 5.2 Dialling locality in Diffusion Transformers (DiTs, ~4.7M params, MNIST)
+
+Inspired by An et al.,<sup class="cite"><a href="#ref-20">[20]</a></sup> we trained adaLN-Zero DiTs (width 192, depth 6) with fixed 2D sin-cos positions while varying patch size $$p \in \{2, 4\}$$ alongside our exact-equivariant $$p = 1$$ learned-position null. The diagram below contrasts how the DiT processes natural vs. scrambled inputs: spatial locality enters only at the $$p \times p$$ patchify step (and positional embedding), while all six adaLN-Zero blocks mix tokens globally via self-attention. Notice the resulting ordering of the slowdown:
+$$\text{U-Net } (0.93) \;>\; \text{DiT } p=2 \; (0.55) \;>\; \text{DiT } p=4 \; (\approx -0.25) \;\approx\; \text{DiT } p=1 \; (0 \text{ exact}).$$
+Capacity stays inside the NO SHIFT band for both DiTs ($$\Delta = -0.39$$ for $$p=2$$; $$+0.04$$ for $$p=4$$). Because this sweep uses one seed per DiT — with $$\rho$$ read across two points ($$n = 128, 256$$, where $$n = 128$$ was added in Amendment 10 after the initial grid came back `UNDEFINED`) and with the U-Net's untuned optimiser schedule (AdamW `lr = 2e-4`, 100k steps) — treat the exact numbers as exploratory; and although the DiTs' fixed-budget $$n^*$$ sits ~2.8 octaves lower than the U-Net's, Section 4's warning forbids reading fixed-budget $$n^*$$ across architectures as a pure capacity comparison.
+
+<div class="viz-breakout" id="viz-arch-dit"></div>
+
+### 5.3 CIFAR-10 at 100k → 300k (32×32 colour images, `3.8M` U-Net)
+
+At 100k steps, CIFAR-10 repeats the pattern: $$\Delta(100\text{k}) = -0.48$$ (`NO SHIFT`, sitting $$0.02$$ inside the $$0.5$$ border) and mean $$\rho = 0.94$$ (`SPEED EFFECT`). Extending $$n \in \{128, 256, 512\}$$ to 300k largely closes the `0.70` vs `1.00` gap at $$n=128$$ (reaching `0.93` vs `1.00`, gap `0.07`), yet $$n = 256$$ levels out at `0.80` vs `0.98` (gap `0.18`, late slope `+0.015`, formally `INCONCLUSIVE`). Two experimental details to keep in mind: no CIFAR-10 MLP null was run, and our CIFAR permutation shuffled the 1,024 pixel positions while **keeping each pixel's `(R, G, B)` triplet together** — preserving cross-channel colour correlations for the first convolution; a cleaner follow-up should permute all 3,072 scalar coordinates independently. Below you can inspect sixteen actual training images from our $$n = 128$$ CIFAR-10 subset before and after scrambling alongside their 300k-step nearest-neighbour matches.
+
+<div class="viz-breakout" id="viz-cifar-train"></div>
 
 <div class="viz-breakout" id="viz-scale-arch"></div>
 
