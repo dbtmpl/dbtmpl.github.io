@@ -505,15 +505,6 @@ html, body {
   margin: 0 0 8px;
 }
 
-.callout--honesty {
-  border-left: 4px solid var(--accent);
-  background: color-mix(in srgb, var(--accent-soft) 35%, var(--surface));
-}
-
-.callout--honesty .callout__title {
-  color: var(--accent);
-}
-
 .callout--physics {
   border-left: 4px solid var(--link);
   background: color-mix(in srgb, var(--viz-nat-soft) 45%, var(--surface));
