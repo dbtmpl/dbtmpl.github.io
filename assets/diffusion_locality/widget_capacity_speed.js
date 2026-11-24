@@ -241,11 +241,11 @@
       K.el("div", {}, [
         K.el("h3", {
           class: "viz-title",
-          text: "Capacity Explorer: Memorised Fraction m(n) Across Budgets, Replicates & the MLP Null",
+          text: "Onset Explorer: Memorised Fraction m(n) Across Training Budgets, Replicates & the MLP Null",
         }),
         K.el("p", {
           class: "viz-subtitle",
-          text: "Scrub the training budget to watch n* drift upward; compare the 3-replicate U-Net against the permutation-equivariant MLP pipeline null.",
+          text: "Scrub the training budget to watch n* drift upward; compare the 3-replicate U-Net against the permutation-equivariant MLP symmetry control.",
         }),
       ]),
     ]);
@@ -436,14 +436,14 @@
       if (deltas.length === entries.length && entries.length >= 2) {
         const sEff = sigma ?? 0;
         if (deltas.every((d) => Math.abs(d) <= Math.max(0.5, sEff))) {
-          verdict = { text: "NO SHIFT", cls: "viz-badge--nat" };
+          verdict = { text: "|Δ| ≤ 0.5", cls: "viz-badge--nat" };
         } else if (
           deltas.every((d) => Math.abs(d) >= Math.max(1.0, 2 * sEff)) &&
           new Set(deltas.map((d) => Math.sign(d))).size === 1
         ) {
-          verdict = { text: "SHIFT", cls: "viz-badge--perm" };
+          verdict = { text: "|Δ| ≥ 1.0", cls: "viz-badge--perm" };
         } else {
-          verdict = { text: "INCONCLUSIVE", cls: "viz-badge--warn" };
+          verdict = { text: "0.5 < |Δ| < 1", cls: "viz-badge--warn" };
         }
       } else {
         const anyBelow = entries.some(
@@ -859,7 +859,7 @@
             });
           } else {
             annLines.push({
-              text: "pre-registered |Δ| \u2264 max(0.5, \u03c3)",
+              text: "\u00b10.5 octave reference band",
               color: T.muted,
             });
           }
@@ -895,7 +895,7 @@
       const cPerm = makeStatCard(isUnet ? "n*_perm" : "n*_perm (0.25)");
       const cDelta = makeStatCard("Mean \u0394");
       const cFourth = makeStatCard(isUnet ? "Noise \u03c3" : "Max |\u0394|");
-      const cVerdict = makeStatCard("Verdict");
+      const cVerdict = makeStatCard("Band");
 
       if (isUnet) {
         cNat.set(

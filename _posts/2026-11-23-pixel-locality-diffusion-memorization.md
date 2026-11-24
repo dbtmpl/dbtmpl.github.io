@@ -1,8 +1,8 @@
 ---
 layout: post
-title: "When Does Spatial Locality Matter in Diffusion Memorisation? Width, Patch Size, and the 2× Slowdown"
-description: "Over-parameterised CNNs eventually memorise pixel-scrambled images — that much is already known. Here we measure the exact diffusion memorisation slowdown (ρ) and explore how it vanishes with U-Net width and dials smoothly with DiT patch size."
-kicker: Research note
+title: "Scrambled Pixels and the Two Clocks of Diffusion Memorisation: An Interactive Exploration"
+description: "An interactive visual tour of how diffusion models generalise before they memorise — using fixed pixel permutations to see why spatial locality opens the generalisation window from the left rather than blocking memorisation, and why fixed-budget onset curves can mislead."
+kicker: Interactive explainer
 date: 2026-11-23
 image: /assets/diffusion_locality/preview.png
 math: true
@@ -20,10 +20,16 @@ custom_js:
 ---
 
 <p class="lead-para">
-Two facts about memorisation in image models are already well established. First, over-parameterised CNNs will still memorise images whose pixels have been shuffled by a fixed random permutation — they just fit them more slowly.<sup class="cite"><a href="#ref-8">[8]</a>, <a href="#ref-9">[9]</a>, <a href="#ref-12">[12]</a></sup> Second, in diffusion models, memorisation is a dynamical condensation whose onset scales with dataset size and model width, \(\tau_{\text{mem}} \propto n\,W^{-1}\).<sup class="cite"><a href="#ref-6">[6]</a>, <a href="#ref-13">[13]</a>, <a href="#ref-15">[15]</a></sup>
+Why do diffusion models trained on finite datasets generate novel images instead of simply photocopying their training set? A rich wave of recent theory frames the answer in terms of <strong>two training clocks</strong>: a fast feature-learning timescale \(\tau_{\text{gen}}\) and a much slower sample-memorisation timescale \(\tau_{\text{mem}} \propto n\,W^{-1}\) that grows linearly with dataset size \(n\) and inversely with network width \(W\).<sup class="cite"><a href="#ref-6">[6]</a>, <a href="#ref-13">[13]</a>, <a href="#ref-15">[15]</a>, <a href="#ref-25">[25]</a>, <a href="#ref-26">[26]</a></sup> As long as \(\tau_{\text{gen}} \ll \tau_{\text{mem}}\), early stopping lands inside a wide generalisation window.
 </p>
 
-Taking those results as our starting point, we wanted to probe a narrower and less charted question: **how large is the spatial-locality slowdown in diffusion memorisation time $$\rho = \log_2(\tau_{\text{perm}} / \tau_{\text{nat}})$$, and what controls it?** Specifically, does a wider U-Net outgrow its reliance on local $$3\times 3$$ convolutions, and can you dial the slowdown continuously by moving to a Diffusion Transformer (DiT) and varying patch size $$p \in \{1, 2, 4\}$$? Explore our real MNIST and CIFAR-10 outputs below before we unpack the method and what turned up.
+When we also think about **spatial locality** in image models — convolutional $$3\times 3$$ kernels, local patch projections, and pixel correlations<sup class="cite"><a href="#ref-3">[3]</a>, <a href="#ref-4">[4]</a>, <a href="#ref-5">[5]</a>, <a href="#ref-12">[12]</a></sup> — it is tempting to picture locality as something that *blocks* or dramatically delays $$\tau_{\text{mem}}$$. Classic deep-learning experiments already hint that this intuition is upside-down: over-parameterised CNNs still fit pixel-scrambled images to zero training error, only with more optimisation inertia.<sup class="cite"><a href="#ref-8">[8]</a>, <a href="#ref-9">[9]</a>, <a href="#ref-10">[10]</a></sup>
+
+To build concrete visual intuition for how those pieces fit together in diffusion models, I ran a set of controlled experiments across MNIST, FashionMNIST, and CIFAR-10 using U-Nets, permutation-equivariant MLPs, and Diffusion Transformers (DiTs), and built the interactive figures below to inspect the trajectories directly. Nothing here claims a new theoretical scaling law — instead, scrambling pixels acts as a clean pedagogical probe that makes three textbook ideas immediately visible:
+
+1. **Locality opens the generalisation window from the left, not the right:** destroying spatial locality wrecks low-noise test denoising and purely local patch models, yet delays the U-Net's memorisation clock $$\tau_{\text{mem}}$$ by only $$\sim 2\times$$ ($$\rho \approx 1$$ octave).
+2. **The fixed-budget onset trap:** because $$\tau_{\text{mem}}(n) \propto n^a$$, stopping training at any fixed step budget $$B$$ turns a pure optimisation slowdown $$\rho$$ into an *apparent* dataset-size shift $$\Delta(B) \approx -\rho/a$$.
+3. **Architectural dials &amp; toy-scale boundaries:** varying U-Net width and DiT patch size illustrates Bonnaire et al.'s $$n^* \propto W$$ scaling<sup class="cite"><a href="#ref-13">[13]</a></sup> and exact $$p=1$$ token symmetry,<sup class="cite"><a href="#ref-21">[21]</a></sup> while highlighting why $$28\times 28$$ full-receptive-field runs probe early-layer optimisation bias rather than a hard geometric locality limit.
 
 <!--more-->
 
@@ -31,94 +37,99 @@ Taking those results as our starting point, we wanted to probe a narrower and le
 
 ---
 
-## 1. Setup & Method: Turning Pixel Permutation Into a Clean Clock
+## 1. Background & Setup: Two Clocks and an Isometric Pixel Scramble
 
-A diffusion model trained on $$n$$ images $$D = \{x_\mu\}_{\mu=1}^n \subset \mathbb{R}^d$$ under a cosine variance-preserving process ($$T = 1000$$ steps, signal retention $$\bar\alpha_t$$) sees noisy inputs
+A diffusion model trained on $$n$$ images $$D = \{x_\mu\}_{\mu=1}^n \subset \mathbb{R}^d$$ under a cosine variance-preserving schedule ($$T = 1000$$ steps, signal retention $$\bar\alpha_t$$) sees noisy inputs
 
 $$
 x_t = \sqrt{\bar\alpha_t}\, x_0 + \sqrt{1 - \bar\alpha_t}\, \varepsilon, \qquad \varepsilon \sim \mathcal{N}(0, I_d).
 $$
 
-For the empirical delta-mixture over $$D$$, the exact Bayes-optimal denoiser is a Boltzmann average — a **Random Energy Model (REM)** in statistical physics:<sup class="cite"><a href="#ref-6">[6]</a>, <a href="#ref-7">[7]</a></sup>
+If a network minimises the empirical score-matching objective without constraint, the exact Bayes-optimal denoiser for the empirical delta-mixture over $$D$$ is a Boltzmann average — equivalent to Derrida's **Random Energy Model (REM)** in statistical physics:<sup class="cite"><a href="#ref-6">[6]</a>, <a href="#ref-7">[7]</a></sup>
 
 $$
 \hat{x}_0^{\text{emp}}(x_t, t) = \sum_{\mu=1}^n w_\mu(x_t, t)\, x_\mu, \qquad
 w_\mu(x_t, t) \propto \exp\!\left(-\frac{\|x_t - \sqrt{\bar\alpha_t}\,x_\mu\|_2^2}{2(1 - \bar\alpha_t)}\right).
 $$
 
-As reverse sampling cools toward $$t \to 0$$, the exact empirical denoiser condenses onto a single training point $$\mu^*$$ and photocopies the dataset. Real neural networks avoid collapsing when $$n$$ is large enough, and recent work points to two distinct sources of locality: **architectural patch locality** (convolutional or patch-restricted local scores)<sup class="cite"><a href="#ref-3">[3]</a>, <a href="#ref-4">[4]</a>, <a href="#ref-17">[17]</a></sup> versus **data-covariance locality** (natural-image pixel correlations that shape sensitivity fields across both U-Nets and DiTs).<sup class="cite"><a href="#ref-5">[5]</a></sup>
+As reverse sampling cools toward $$t \to 0$$, the empirical denoiser condenses onto a single training image $$\mu^*$$ and reproduces it verbatim. Recent work explains why real networks avoid this fate across two complementary axes:
 
-### The intervention and two observables
+- **Dynamical separation of timescales ("two clocks"):** Bonnaire et al.<sup class="cite"><a href="#ref-13">[13]</a></sup> and Urfin et al.<sup class="cite"><a href="#ref-25">[25]</a></sup> show that repeated noising in score matching splits the Neural Tangent Kernel spectrum into two bulks: large eigenvalues that drive fast learning of global population structure ($$\tau_{\text{gen}} \propto W^{-1}$$), and small sample-specific eigenvalues that delay memorisation to $$\tau_{\text{mem}} \propto n\,W^{-1}$$ (see also Favero et al.,<sup class="cite"><a href="#ref-15">[15]</a></sup> Buchanan et al.,<sup class="cite"><a href="#ref-27">[27]</a></sup> and Wang, Finn &amp; Liu's *innovation window* $$[\tau_{\text{rule}}, \tau_{\text{mem}}]$$<sup class="cite"><a href="#ref-26">[26]</a></sup>).
+- **Spatial &amp; statistical locality:** Analytical models of generalising denoisers emphasise restricted local receptive fields or patch scores (Kamb &amp; Ganguli,<sup class="cite"><a href="#ref-3">[3]</a></sup> Niedoba et al.,<sup class="cite"><a href="#ref-17">[17]</a></sup> Hunt, Kamb &amp; Ganguli's BIRD<sup class="cite"><a href="#ref-4">[4]</a></sup>), while Lukoianov et al.<sup class="cite"><a href="#ref-5">[5]</a></sup> and Wang &amp; Pehlevan<sup class="cite"><a href="#ref-11">[11]</a></sup> show how natural-image covariance spectra and local convolutions jointly shape what gets learned first.
 
-Apply one fixed orthogonal permutation matrix $$P \in \{0,1\}^{d\times d}$$ to every training and test image, $$x \mapsto Px$$ (the same "shuffled pixels" transform used by Zhang et al.,<sup class="cite"><a href="#ref-8">[8]</a></sup> *Deep Image Prior*,<sup class="cite"><a href="#ref-9">[9]</a></sup> and Kadkhodaie et al.<sup class="cite"><a href="#ref-12">[12]</a></sup>). Because $$P^\top P = I_d$$, every Euclidean distance and covariance eigenvalue stays **strictly invariant**:
+### Applying a fixed pixel permutation
+
+To watch architectural locality interact with those clocks without changing global data geometry, I use the classic "shuffled pixels" intervention from Zhang et al.,<sup class="cite"><a href="#ref-8">[8]</a></sup> *Deep Image Prior*,<sup class="cite"><a href="#ref-9">[9]</a></sup> and Kadkhodaie et al.:<sup class="cite"><a href="#ref-12">[12]</a></sup> apply one fixed orthogonal permutation matrix $$P \in \{0,1\}^{d\times d}$$ to every image, $$x \mapsto Px$$. Because $$P^\top P = I_d$$, every pairwise Euclidean distance and global covariance eigenvalue stays **strictly invariant**:
 
 $$
 \|Px - Py\|_2 = \|x - y\|_2, \qquad \Sigma_{Px} = P \Sigma_x P^\top.
 $$
 
-Meanwhile, every $$3\times 3$$ convolutional patch shatters into nine scattered, nearly uncorrelated coordinates. Crucially, Euclidean invariance keeps our memorisation metric unbiased across coordinate systems. Following Yoon et al.,<sup class="cite"><a href="#ref-1">[1]</a></sup> Gu et al.,<sup class="cite"><a href="#ref-14">[14]</a></sup> and Bonnaire et al.,<sup class="cite"><a href="#ref-13">[13]</a></sup> we draw 1,000 DDIM-50 samples from EMA weights and call a sample **memorised** if its nearest training distance $$d_1$$ is less than one third of its second-nearest distance $$d_2$$:
+Meanwhile, every $$3\times 3$$ convolutional window is torn into nine scattered, nearly uncorrelated coordinates across the canvas. Because $$P$$ is an $$L_2$$ isometry, the standard nearest-neighbour memorisation test from Yoon et al.,<sup class="cite"><a href="#ref-1">[1]</a></sup> Gu et al.,<sup class="cite"><a href="#ref-14">[14]</a></sup> and Bonnaire et al.<sup class="cite"><a href="#ref-13">[13]</a></sup> remains identically calibrated in both coordinate systems. Drawing 1,000 DDIM-50 samples from EMA weights, a generated sample is marked **memorised** if its nearest training distance $$d_1$$ is less than one third of its second-nearest training distance $$d_2$$:
 
 $$
 \frac{d_1}{d_2} < \frac{1}{3}.
 $$
 
-Unlike denoising PSNR or FID — where worse denoising on scrambled images<sup class="cite"><a href="#ref-12">[12]</a></sup> can masquerade as less memorisation — $$d_1/d_2$$ is identical in natural and permuted space. From the memorised fraction $$m(n, \text{step})$$, we read two quantities in octaves (powers of two):
+Unlike denoising PSNR or FID — where degraded image quality on scrambled inputs<sup class="cite"><a href="#ref-12">[12]</a></sup> can be mistaken for reduced memorisation — $$d_1/d_2$$ measures sample copying directly. From the memorised fraction $$m(n, \text{step})$$, it is helpful to track two quantities in octaves (base-2 logs):
 
-- **Fixed-budget onset shift:** $$\Delta(B) = \log_2 n^*_{\text{perm}}(B) - \log_2 n^*_{\text{nat}}(B)$$, where $$n^*(B)$$ is the dataset size at which $$m$$ crosses $$0.5$$ at training budget $$B$$.
+- **Fixed-budget onset shift:** $$\Delta(B) = \log_2 n^*_{\text{perm}}(B) - \log_2 n^*_{\text{nat}}(B)$$, where $$n^*(B)$$ is the dataset size at which $$m$$ crosses $$0.5$$ at step budget $$B$$.
 - **Memorisation-time slowdown:** $$\rho(n) = \log_2\!\big(\tau_{\text{perm}}(n) / \tau_{\text{nat}}(n)\big)$$, where $$\tau(n)$$ is the training step when $$m$$ first crosses $$0.5$$.
 
-To anchor both measurements, we pair every convolutional run with an exact permutation-equivariant control (a residual MLP, and later a patch-1 DiT with learned positions) where both $$\Delta$$ and $$\rho$$ must vanish up to finite-seed noise. The schematic below traces a real CIFAR-10 image before and after $$P$$ through forward noising, our purely convolutional U-Net (3.83M params, channels 32–64–128, no attention), and the reverse DDIM-50 loop.
+As a pipeline sanity check, every convolutional setup is paired with an exact permutation-equivariant control (a residual MLP, and later a patch-1 DiT with learned positional embeddings) where $$\Delta$$ and $$\rho$$ must vanish up to seed noise. The diagram below traces a real CIFAR-10 image before and after $$P$$ through forward diffusion, the purely convolutional `×1` U-Net (3.83M params, channels 32–64–128, no attention), and DDIM-50 sampling.
 
 <div class="viz-breakout" id="viz-arch-unet"></div>
 
-As a purely local theoretical anchor before training neural networks, we also ran a network-free square-patch local-score (LS) model calibrated on natural MNIST following Kamb &amp; Ganguli.<sup class="cite"><a href="#ref-3">[3]</a></sup> Under pixel permutation, that fixed square-patch machine collapses completely ($$\Delta_{\text{LS}} \le -3$$): each scattered patch locks onto a *different* training image, producing un-copied mosaics with median $$d_1/d_2 \approx 0.90\text{--}0.99$$. As Hunt, Kamb &amp; Ganguli note for BIRD,<sup class="cite"><a href="#ref-4">[4]</a></sup> fixed-patch machines track trained networks best early in training and diverge later, so $$\Delta_{\text{LS}} \le -3$$ marks the extreme purely-local limit rather than a late-training U-Net prediction.
+### Contrast with a strictly local patch machine
+
+Before looking at trained U-Nets, it helps to see what would happen if a denoiser were *literally* restricted to fixed square patches throughout training. Following Kamb &amp; Ganguli,<sup class="cite"><a href="#ref-3">[3]</a></sup> I evaluated a network-free square-patch local-score (LS) estimator calibrated on natural MNIST. Under pixel permutation, that fixed square-patch machine collapses completely ($$\Delta_{\text{LS}} \le -3$$, at least an $$8\times$$ drop in $$n^*$$): each scattered patch locks onto a *different* training image, assembling un-copied mosaics with median $$d_1/d_2 \approx 0.90\text{--}0.99$$. As Hunt, Kamb &amp; Ganguli note in BIRD<sup class="cite"><a href="#ref-4">[4]</a></sup> (which itself uses data-adapted Wiener masks on MNIST/FashionMNIST that permute covariantly with the pixels), fixed-patch approximations capture trained networks early in training rather than in the late memorising regime — making $$\Delta_{\text{LS}} \le -3$$ a clean illustration of the extreme purely-local limit.
 
 <div class="viz-breakout" id="viz-ls"></div>
 
 <details class="deep-dive">
-  <summary>Math note: Why the residual MLP and patch-1 DiT are exact symmetry nulls under \(P\)</summary>
+  <summary>Math note: Why the residual MLP and patch-1 DiT are exact symmetry controls under \(P\)</summary>
   <p>
     For a residual MLP with i.i.d. isotropic Gaussian input/output initialisations \(W_0, W_{\text{out}}\), applying \(x \mapsto Px\) is equivalent to relabelling \(\tilde{W}_0 = W_0 P^\top\) and \(\tilde{W}_{\text{out}} = P W_{\text{out}}\), leaving the initial weight distribution, forward pass, AdamW trajectory, and generated sample distribution identical up to \(P\).
   </p>
   <p>
-    The exact same symmetry holds for a Diffusion Transformer with patch size \(p=1\) and i.i.d. normal learned positional embeddings \(E_{\text{pos}} \in \mathbb{R}^{d \times w}\) (analogous to Tolstikhin et al.<sup class="cite"><a href="#ref-21">[21]</a></sup>): permuting pixels simply permutes the rows of \(E_{\text{pos}}\) (verified numerically in our DiT implementation to max fp32 discrepancy \(2.4 \times 10^{-7}\)).
+    The exact same symmetry holds for a Diffusion Transformer with patch size \(p=1\) and i.i.d. normal learned positional embeddings \(E_{\text{pos}} \in \mathbb{R}^{d \times w}\) (cf. Tolstikhin et al.<sup class="cite"><a href="#ref-21">[21]</a></sup>): permuting pixels simply permutes the rows of \(E_{\text{pos}}\) (verified numerically in the DiT implementation to a maximum fp32 discrepancy of \(2.4 \times 10^{-7}\)).
   </p>
 </details>
 
 ---
 
-## 2. The Baseline Clock: A Replicated ~2× Slowdown and the Fixed-Budget Trap
+## 2. Memorisation Barely Slows Down — and Why Fixed Budgets Mislead
 
-Before varying width or architecture, we measured $$\Delta$$ and $$\rho$$ on our base `×1` U-Net (3.83M params) across MNIST and FashionMNIST (3 replicates per arm, `rep0`/`repA`/`repB`, plus 3 independent random permutations on MNIST and the MLP null control).
+What happens when we train the 3.83M-parameter U-Net on natural versus permuted MNIST and FashionMNIST (3 seed replicates per arm, plus 3 independent random permutations on MNIST and the MLP symmetry control)?
 
-Two numbers summarise the baseline cleanly:
-
-1. **At 100k steps, the onset shift is small but nonzero:** $$\Delta(100\text{k}) \in [-0.35, -0.41]$$ on MNIST and $$[-0.36, -0.43]$$ on FashionMNIST against a replicate noise floor of $$\sigma = 0.08$$ (all six replicates inside our pre-registered $$\pm 0.5$$ equivalence band, with the MLP null passing at $$\vert\Delta_{\text{MLP}}\vert \le 0.37$$ on MNIST and $$\le 0.29$$ on FashionMNIST's finer grid).
-2. **In training time, memorisation slows down by ~2×:** on MNIST at $$n = 2048$$, natural and permuted U-Nets reach the same plateau (`0.82` vs. `0.83` at 300k), yet the permuted arm takes **$$\approx 2.0\text{--}2.3\times$$ longer** to reach $$m = 0.5$$: $$\rho(2048) = 1.18, 1.17, 1.06$$ across replicates, and $$1.18, 1.07, 0.99$$ across three independent permutations (while $$\vert\rho_{\text{MLP}}\vert \le 0.28$$). On FashionMNIST at $$n = 2048$$, the permuted arm is still climbing at 300k (`m = 0.33–0.43`), giving censored one-sided lower bounds $$\rho > 0.97\text{--}1.20$$.
+1. **Memorisation still happens, delayed by roughly $$2\times$$:** On MNIST at $$n = 2048$$, natural and permuted U-Nets climb to essentially the same memorised fraction by 300k steps (`0.82` vs. `0.83`), just as *Deep Image Prior*<sup class="cite"><a href="#ref-9">[9]</a></sup> and Zhang et al.<sup class="cite"><a href="#ref-8">[8]</a></sup> would lead us to expect for an over-parameterised CNN whose bottleneck covers the full image. Crossing $$m = 0.5$$ simply takes **$$\approx 2.0\text{--}2.3\times$$ more gradient steps** on scrambled pixels: $$\rho(2048) = 1.18, 1.17, 1.06$$ across seed replicates and $$1.18, 1.07, 0.99$$ across three random permutations (while the MLP control stays centered near zero, $$\vert\rho_{\text{MLP}}\vert \le 0.28$$). On FashionMNIST at $$n = 2048$$, the permuted arm is still climbing at 300k (`m = 0.33–0.43`), consistent with a $$\ge 2\times$$ delay.
+2. **At a fixed 100k budget, that delay projects onto a small horizontal shift:** Reading $$n^*$$ at 100k steps gives $$\Delta(100\text{k}) \in [-0.35, -0.41]$$ octaves on MNIST and $$[-0.36, -0.43]$$ on FashionMNIST (replicate spread $$\sigma = 0.08$$).
 
 <div class="viz-breakout" id="viz-capacity"></div>
 
 <div class="viz-breakout" id="viz-speed"></div>
 
-### Why a speed gap looks like a capacity shift at any fixed budget
+### Algebra of the fixed-budget trap: $$\Delta(B) \approx -\rho / a$$
 
-Earlier deep-learning work established that CNNs suffer optimisation inertia on permuted pixels<sup class="cite"><a href="#ref-9">[9]</a>, <a href="#ref-10">[10]</a>, <a href="#ref-22">[22]</a></sup> and that diffusion learning times scale inversely with covariance eigenvalues $$\tau_k \propto 1/\lambda_k$$ — invariant for an MLP, but redirected into *patch-covariance* space by local convolutions<sup class="cite"><a href="#ref-11">[11]</a>, <a href="#ref-24">[24]</a></sup> (whereas non-Gaussian statistics can eventually induce local features even in FC nets<sup class="cite"><a href="#ref-23">[23]</a></sup>). Meanwhile, Bonnaire et al.<sup class="cite"><a href="#ref-13">[13]</a></sup> and Favero et al.<sup class="cite"><a href="#ref-15">[15]</a></sup> showed that diffusion memorisation time scales as a power law $$\tau_{\text{nat}}(n) \propto n^a$$ (with $$a \approx 1$$).
+Why does a $$\sim 2\times$$ slowdown in training steps look like a $$-0.35$$ to $$-0.64$$ octave shift in dataset size $$n^*$$ when you slice horizontally at a fixed step budget $$B$$?
 
-Put those two facts together: if pixel permutation multiplies the memorisation clock by $$2^\rho$$, then stopping both arms at any fixed training budget $$B$$ automatically produces an *apparent* capacity shift:
+Wang &amp; Pehlevan<sup class="cite"><a href="#ref-11">[11]</a></sup> show analytically that while MLP diffusion dynamics depend only on global covariance eigenvalues $$\tau_k \propto 1/\lambda_k$$ (invariant under $$P$$), local convolutions redirect early learning into *patch-covariance* space (see also d'Ascoli et al.,<sup class="cite"><a href="#ref-10">[10]</a></sup> Arpit et al.,<sup class="cite"><a href="#ref-22">[22]</a></sup> Ingrosso &amp; Goldt,<sup class="cite"><a href="#ref-23">[23]</a></sup> and Wang et al.<sup class="cite"><a href="#ref-24">[24]</a></sup>). Meanwhile, Bonnaire et al.<sup class="cite"><a href="#ref-13">[13]</a></sup> and Favero et al.<sup class="cite"><a href="#ref-15">[15]</a></sup> establish that memorisation time grows as a power law $$\tau_{\text{nat}}(n) \propto n^a$$ (with $$a \approx 1$$ in the linear scaling regime).
+
+Combining a multiplicative slowdown $$2^\rho$$ with $$\tau_{\text{nat}}(n) \propto n^a$$ immediately links the two observables:
 
 $$
 \tau_{\text{perm}}(n) \approx 2^\rho\,\tau_{\text{nat}}(n) \propto 2^\rho\,n^a \implies \Delta(B) = \log_2 n^*_{\text{perm}}(B) - \log_2 n^*_{\text{nat}}(B) \approx -\frac{\rho}{a}.
 $$
 
-On MNIST, the local log-log slope $$a = \mathrm{d}\log_2 \tau_{\text{nat}} / \mathrm{d}\log_2 n$$ steepens from $$a \approx 1.0$$ early on to $$a \approx 1.7$$ around $$n = 1024\text{--}2048$$. That immediately explains why $$\Delta(B)$$ shrinks from $$-0.64$$ at 10k steps toward $$-0.35$$ at 100k — and serves as a practical methodological warning: **fixed-budget $$n^*$$ comparisons across data transforms or architectures entangle memorisation speed with capacity.**
+On MNIST, the empirical log-log slope $$a = \mathrm{d}\log_2 \tau_{\text{nat}} / \mathrm{d}\log_2 n$$ steepens from $$a \approx 1.0$$ at small budgets to $$a \approx 1.7$$ around $$n = 1024\text{--}2048$$, so $$\Delta(B)$$ shrinks from $$-0.64$$ at 10k steps to $$-0.35$$ at 100k and $$-0.33$$ at 300k. Methodologically, this is a useful trap to keep in mind whenever reading empirical memorisation plots: **comparing $$n^*$$ across data transforms, optimisers, or architectures at a fixed step budget mixes optimisation speed with asymptotic capacity.**
 
 <div class="callout callout--physics">
-  <div class="callout__title">Low-noise denoising error &amp; plateau scope</div>
+  <div class="callout__title">The real casualty of scrambling pixels: the generalisation clock \(\tau_{\text{gen}}\)</div>
   <p>
-    Switch the right panel below to <strong>Danger Zone: Per-t MSE Gap</strong> (cf. Dodson et al.<sup class="cite"><a href="#ref-18">[18]</a></sup> and Kaiser &amp; Kollmann<sup class="cite"><a href="#ref-19">[19]</a></sup>): at low noise (\(t = 50\)), the permuted U-Net retains a much larger test–train denoising gap (\(1.64\) vs. \(0.90\) at 100k, \(n = 2048\)) even as its \(d_1/d_2\) memorisation catches up, echoing Kadkhodaie et al.<sup class="cite"><a href="#ref-12">[12]</a></sup>
+    Switch the right-hand panel below to <strong>Danger Zone: Per-t MSE Gap</strong> (motivated by low-noise memorisation analyses in Dodson et al.<sup class="cite"><a href="#ref-18">[18]</a></sup> and Kaiser &amp; Kollmann<sup class="cite"><a href="#ref-19">[19]</a></sup>). At low noise (\(t = 50\), \(n = 2048\)), the permuted U-Net suffers a nearly \(2\times\) larger test–train denoising gap at 100k steps (\(1.64\) vs. \(0.90\)) even as its \(d_1/d_2\) sample copying catches up — the exact denoising degradation highlighted by Kadkhodaie et al.<sup class="cite"><a href="#ref-12">[12]</a></sup>
   </p>
   <p>
-    <strong>Plateau scope:</strong> Our runs did not reach an asymptotic plateau at \(n \ge 4096\) (at 300k steps, \(n=4096\) sits at \(m_{\text{nat}} = 0.47\) vs. \(m_{\text{perm}} = 0.26\), and \(\Delta\) sits at \(-0.33\)). Thus "onset" here always means fixed-budget onset rather than an infinite-training ceiling.
+    Viewed through the two-clock picture of Urfin et al.<sup class="cite"><a href="#ref-25">[25]</a></sup> and Wang, Finn &amp; Liu,<sup class="cite"><a href="#ref-26">[26]</a></sup> spatial locality does <em>not</em> protect diffusion models by pushing \(\tau_{\text{mem}}\) far to the right (scrambling only moves \(\tau_{\text{mem}}\) by \(\sim 2\times\)). Instead, convolutional locality pulls \(\tau_{\text{gen}}\) sharply to the <em>left</em>, opening the window \([\tau_{\text{gen}}, \tau_{\text{mem}}]\) where clean generalising score fields form long before sample copying sets in.
   </p>
 </div>
 
@@ -126,64 +137,36 @@ On MNIST, the local log-log slope $$a = \mathrm{d}\log_2 \tau_{\text{nat}} / \ma
 
 ---
 
-## 3. Finding 1 — Model Width Shrinks the Slowdown
+## 3. Exploratory Probes: Width, Transformer Patch Size & CIFAR-10
 
-With the baseline clock $$\rho \approx 1$$ calibrated on the `×1` U-Net, we asked the first question that existing literature does not answer: **does the spatial-locality slowdown stay constant as you scale the U-Net's width, or does a wider network outgrow it?**
+To see how this picture behaves as we vary model scale, architecture, and image statistics, I also ran a set of **single-seed exploratory sweeps**. Because these runs use one seed per configuration and fixed 100k–300k budgets without per-architecture hyperparameter sweeps, they should be read as qualitative illustrations — along with instructive experimental caveats — rather than settled scaling measurements.
 
-We swept U-Net base channels across three widths on MNIST (single seed per width, 100k steps):
-- **`×½` (16–32–64, 1.15M params):** $$\log_2 n^*_{\text{nat}} = 10.30$$, $$\Delta(100\text{k}) = -0.65$$, mean **$$\rho = 1.08$$**
-- **`×1` (32–64–128, 3.83M params):** $$\log_2 n^*_{\text{nat}} = 11.42$$, $$\Delta(100\text{k}) = -0.35$$, mean **$$\rho = 0.93$$**
-- **`×2` (64–128–256, 14.19M params):** $$\log_2 n^*_{\text{nat}} = 12.26$$, $$\Delta(100\text{k}) = +0.05$$, mean **$$\rho = 0.26$$**
+### U-Net width (`×½`, `×1`, `×2`) and Bonnaire scaling
 
-Two distinct effects appear in that sweep — one expected, one surprising:
+Sweeping U-Net base channels across three widths on MNIST (100k steps, single seed):
+- **`×½` (16–32–64, 1.15M params):** $$\log_2 n^*_{\text{nat}} = 10.30$$, $$\Delta(100\text{k}) = -0.65$$, mean $$\rho = 1.08$$ (on $$n \in \{256, 512\}$$)
+- **`×1` (32–64–128, 3.83M params):** $$\log_2 n^*_{\text{nat}} = 11.42$$, $$\Delta(100\text{k}) = -0.35$$, mean $$\rho = 0.93$$ (on $$n \in \{512, 1024, 2048\}$$)
+- **`×2` (64–128–256, 14.19M params):** $$\log_2 n^*_{\text{nat}} = 12.26$$, $$\Delta(100\text{k}) = +0.05$$, mean $$\rho = 0.26$$ (on $$n \in \{1024, 2048, 4096\}$$)
 
-1. **Natural onset scales by ~1 octave per width doubling (`+1.12` and `+0.84` octaves).** That directly reproduces Bonnaire et al.'s<sup class="cite"><a href="#ref-13">[13]</a></sup> scaling $$\tau_{\text{mem}} \propto n\,W^{-1}$$ (and qualitatively matches Gu et al.<sup class="cite"><a href="#ref-14">[14]</a></sup> and Marion &amp; Wu<sup class="cite"><a href="#ref-16">[16]</a></sup>): doubling width halves memorisation time, which doubles $$n^*$$ at a fixed budget.
-2. **The permutation slowdown $$\rho$$ drops by 4× as width quadruples (`1.08 → 0.93 → 0.26`),** and $$\Delta(100\text{k})$$ vanishes alongside it via $$-\rho/a$$ (`-0.65 → -0.35 → +0.05`).
+On natural images, fixed-budget $$n^*$$ grows by `+1.12` and `+0.84` octaves per width doubling — a clean textbook reproduction of Bonnaire et al.'s<sup class="cite"><a href="#ref-13">[13]</a></sup> scaling $$\tau_{\text{mem}} \propto n\,W^{-1}$$ (see also Gu et al.<sup class="cite"><a href="#ref-14">[14]</a></sup> and Marion &amp; Wu<sup class="cite"><a href="#ref-16">[16]</a></sup>): doubling width halves memorisation time, doubling the dataset size memorised within 100k steps.
 
-### What could this mean?
+Meanwhile, the measured permutation slowdown $$\rho$$ shrinks toward zero at `×2` (`1.08 → 0.93 → 0.26`). Intuitively, an heavily over-parameterised 14.2M-parameter U-Net on $$28\times 28$$ MNIST has abundant parallel channels to route scattered coordinates through its full-image bottleneck. At the same time, two experimental confounds sit right on the surface here: $$\rho$$ was evaluated on **non-overlapping $$n$$ ranges** across widths, and at `×2` natural memorisation occurs close enough to the earliest evaluation checkpoints that coarse checkpoint spacing can compress the apparent ratio.
 
-If the collapse of $$\rho$$ with width holds up under multi-seed replication, it points to a crisp physical picture: **convolutional locality acts primarily as an optimisation crutch for capacity-constrained networks.** When a U-Net has few channels (`1.15M`), sharing $$3\times 3$$ spatial weights across coherent neighbourhoods provides a large speed boost — removing that correlation penalises memorisation by more than $$2\times$$. Give the same 3-level U-Net four times the channel width (`14.19M` parameters, roughly $$3.7\times$$ more weights per doubling), and it has enough parallel feature channels to route scattered pixel pairs through its full-image bottleneck almost as rapidly as contiguous edges.
+### DiT patch size (`p = 1, 2, 4`): isolating where symmetry breaks
 
-**Two confounds must be checked before treating this as settled:**
-- **Non-overlapping $$n$$ ranges:** because wider models memorise larger datasets at 100k, mean $$\rho$$ was read on $$n \in \{256, 512\}$$ at `×½` versus $$n \in \{1024, 2048, 4096\}$$ at `×2`, and $$\rho(n)$$ itself varies with $$n$$.
-- **Early-step resolution at `×2`:** at 14.2M parameters on small MNIST subsets, both arms memorise quickly enough that $$\tau_{\text{nat}}$$ sits close to our earliest evaluation checkpoints (and both `×½` capacity and `×2` speed are single-seed exploratory runs). Running 3 seeds on a **matched $$n \in \{512, 1024\}$$ grid** is therefore the highest-value follow-up from this entire project.
-
----
-
-## 4. Finding 2 — Dialling Locality Through Transformer Patch Size
-
-Our second novel axis replaces the binary CNN-vs-MLP contrast with a **continuous architectural dial**. While U-Nets and transformers already diverge in sample reproducibility,<sup class="cite"><a href="#ref-2">[2]</a></sup> in a Diffusion Transformer (DiT)<sup class="cite"><a href="#ref-20">[20]</a></sup> every self-attention layer mixes all tokens globally from Layer 1 — meaning spatial locality enters *only* at the $$p\times p$$ patchify projection and positional encoding.
-
-We trained ~4.7M-parameter adaLN-Zero DiTs (width 192, depth 6, 6 heads) on MNIST while varying patch size $$p \in \{1, 2, 4\}$$ alongside our convolutional U-Net (`3.83M`). Use the interactive architecture diagram below to switch $$p \in \{1, 2, 4\}$$ and see exactly where permutation symmetry breaks.
+Moving from a U-Net to a Diffusion Transformer (DiT; ~4.7M params, width 192, depth 6, 6 heads, adaLN-Zero)<sup class="cite"><a href="#ref-2">[2]</a>, <a href="#ref-20">[20]</a></sup> makes it visually clear *where* spatial locality enters a transformer. Every self-attention block mixes all tokens globally from Layer 1, so spatial neighbourhood structure enters **only** at the $$p\times p$$ patchify linear projection and positional encoding. Switch $$p \in \{1, 2, 4\}$$ in the interactive schematic below to trace how permutation symmetry is preserved or broken.
 
 <div class="viz-breakout" id="viz-arch-dit"></div>
 
-Across architectures, the measured memorisation slowdown $$\rho$$ orders cleanly with the strength of the local patch prior:
+On this single-seed MNIST probe ($$n \in \{128, 256\}$$, sharing the U-Net's `AdamW lr = 2e-4` schedule), the measured slowdown orders from the purely convolutional U-Net (`0.93`) down to `DiT p=2` (`0.55`), while `DiT p=4` (`-0.25`, within single-seed noise) sits near the exact `DiT p=1` symmetry null (`0` by construction).
 
-$$
-\text{Conv U-Net } (0.93) \;>\; \text{DiT } p=2 \; (0.55) \;>\; \text{DiT } p=4 \; (\approx -0.25) \;\approx\; \text{DiT } p=1 \; (0 \text{ exact}).
-$$
+Here too, keeping the caveats explicit is half the lesson:
+- **Patch size bundles several changes together:** moving from $$p = 2$$ to $$p = 4$$ changes sequence length from 196 to 49 tokens, per-token embedding dimension, and how fixed 2D sin-cos positional encodings align with scrambled content.
+- **Why cross-architecture $$n^*$$ cannot be read as capacity:** the DiTs' 100k-step $$n^*$$ sits ~2.8 octaves below the U-Net's on this shared learning rate — a textbook example of Section 2's fixed-budget confound when architectures have different optimisation speeds and untuned schedules, and when we have not jointly tracked a generalisation-quality clock $$\tau_{\text{gen}}$$.
 
-Meanwhile, fixed-budget onset stays inside the no-shift band for both DiTs ($$\Delta = -0.39$$ for $$p=2$$; $$+0.04$$ for $$p=4$$).
+### Colour photographs (CIFAR-10)
 
-### What does this ordering tell us?
-
-- **At $$p = 1$$ with learned positional embeddings (exact null):** each pixel is its own token. Permuting pixels merely reorders the token sequence and learned position rows — giving exact permutation equivariance ($$\rho = 0$$, $$\Delta = 0$$).
-- **At $$p = 2$$ with fixed 2D sin-cos positions ($$\rho = 0.55$$):** grouping pixels into $$2\times 2$$ local patches reintroduces roughly *half* of the U-Net's convolutional slowdown. Scrambling pixels breaks those 4-pixel patches and breaks the alignment between pixel content and the fixed 2D sin-cos grid, yet global self-attention in all 6 blocks compensates much faster than a stack of local $$3\times 3$$ convolutions.
-- **At $$p = 4$$ with fixed 2D sin-cos positions ($$\rho \approx -0.25$$):** with only 49 coarse $$4\times 4$$ tokens on MNIST, each token's linear projection already aggregates 16 pixels and global attention dominates — the local-patch speed advantage vanishes into single-seed noise.
-
-**Important caveats on interpreting the DiT sweep:**
-- This is a single-seed exploratory sweep with $$\rho$$ measured at only two dataset sizes ($$n = 128, 256$$, where $$n = 128$$ was added after the initial grid left DiT speed undefined), and the DiTs shared the U-Net's untuned optimiser schedule (`AdamW lr = 2e-4`, 100k steps).
-- Patch size is not a pure single-knob dial: moving from $$p = 2$$ to $$p = 4$$ simultaneously reduces sequence length from 196 to 49 tokens, changes per-token projection width, and alters how fixed sin-cos positions interact with permuted inputs.
-- Finally, although the DiTs' 100k-step $$n^*$$ sits ~2.8 octaves below the U-Net's, Section 2's identity warns against reading that fixed-budget gap as a pure capacity difference — without tuning learning rates and training each architecture to plateau, cross-architecture $$n^*$$ mixes optimisation speed with capacity.
-
----
-
-## 5. Checking Natural Colour Images (CIFAR-10) & Full Exploratory Dashboard
-
-Does the same pattern survive on $$32\times 32$$ RGB colour photographs? On CIFAR-10 with our 3.83M U-Net (single seed), 100k steps reproduce the MNIST signature closely: $$\Delta(100\text{k}) = -0.48$$ and mean $$\rho = 0.94$$ ($$1.07$$ at $$n=128$$, $$0.80$$ at $$n=256$$). Extending $$n \in \{128, 256, 512\}$$ to 300k closes the $$n = 128$$ gap from `0.70 vs. 1.00` to `0.93 vs. 1.00` (gap `0.07`), while $$n = 256$$ still sits at `0.80 vs. 0.98` (gap `0.18`, late slope `+0.015`, formally inconclusive on whether it reaches the exact same ceiling).
-
-One clean detail to note on CIFAR-10: our permutation shuffled the 1,024 spatial positions while **keeping each pixel's `(R, G, B)` triplet together**. That preserves cross-channel colour correlation for the first convolution (biasing $$\rho$$ slightly downward compared to permuting all 3,072 scalar coordinates independently), and no CIFAR-10 MLP null was run. Below you can inspect sixteen actual training images from our $$n = 128$$ CIFAR-10 subset before and after scrambling alongside their 300k-step nearest-neighbour copies, followed by the full interactive explorer for Width, DiT Patch Size, and CIFAR-10.
+Repeating the `×1` U-Net probe on $$32\times 32$$ CIFAR-10 (single seed) produces a very similar trajectory: $$\Delta(100\text{k}) = -0.48$$ and mean $$\rho = 0.94$$ ($$1.07$$ at $$n=128$$, $$0.80$$ at $$n=256$$). Extending $$n \in \{128, 256, 512\}$$ to 300k steps narrows the $$n = 128$$ memorised-fraction gap from `0.70 vs. 1.00` to `0.93 vs. 1.00`, while $$n = 256$$ reaches `0.80 vs. 0.98` (still slowly climbing at 300k). Note that this permutation shuffled the 1,024 spatial pixel locations while keeping each pixel's `(R, G, B)` triplet intact — preserving local cross-channel colour correlation in the first convolution. Below you can inspect sixteen actual training images from the $$n = 128$$ CIFAR-10 subset alongside their 300k-step nearest-neighbour copies, followed by the combined exploratory dashboard.
 
 <div class="viz-breakout" id="viz-cifar-train"></div>
 
@@ -191,44 +174,18 @@ One clean detail to note on CIFAR-10: our permutation shuffled the 1,024 spatial
 
 ---
 
-## 6. Synthesis & What to Run Next
+## 4. Putting the Picture Together
 
-Pulling the baseline calibration and the new exploratory leads into one view:
+Stepping back from the individual curves, these visualisations illustrate a coherent story that already sits across the deep-learning and statistical-physics literature:
 
-| Result | Relation to prior work | Current evidence | Why it matters |
-|---|---|---|---|
-| **Baseline U-Net slowdown $$\rho \approx 1.0\text{--}1.2$$** with small $$\Delta(100\text{k}) \in [-0.35, -0.43]$$ | Diffusion memorisation-time measurement of CNN permutation inertia<sup class="cite"><a href="#ref-8">[8]</a>, <a href="#ref-9">[9]</a>, <a href="#ref-11">[11]</a>, <a href="#ref-12">[12]</a></sup> | **Replicated** on MNIST (3 reps, 3 perms, MLP null); censored `> 0.97–1.20` on FMNIST at 300k. | Quantifies the ~2× memorisation-time cost of losing spatial locality |
-| **Fixed-budget confound $$\Delta(B) \approx -\rho/a$$** | Algebraic consequence of $$\tau_{\text{mem}} \propto n^a$$<sup class="cite"><a href="#ref-13">[13]</a>, <a href="#ref-15">[15]</a></sup> | **Descriptive** across 10k → 100k; $$n \ge 4096$$ unplateaued at 300k. | Prevents mistaking optimisation slowdowns for capacity shifts |
-| **Slowdown $$\rho$$ collapses with U-Net width** (`1.08 → 0.93 → 0.26`) | Natural onset `+1` oct/2×W replicates Bonnaire et al.;<sup class="cite"><a href="#ref-13">[13]</a></sup> **$$\rho$$-vs-width is new.** | **Exploratory** (1 seed/width, non-overlapping $$n$$ ranges). | Suggests convolutional locality is an optimisation crutch for small models |
-| **Slowdown orders with DiT patch size** (`U-Net 0.93 > p2 0.55 > p4 ≈ p1 = 0`) | Connects DiT locality<sup class="cite"><a href="#ref-20">[20]</a></sup> and $$p=1$$ symmetry<sup class="cite"><a href="#ref-21">[21]</a></sup> to memorisation speed; **ordering is new.** | **Exploratory** (1 seed, $$n \in \{128, 256\}$$, shared U-Net lr). | Shows global self-attention softens the locality penalty continuously |
-| **CIFAR-10 transfer** ($$\Delta = -0.48$$, $$\rho = 0.94$$; 300k gap `0.07` at `n=128`, `0.18` at `n=256`) | Extends shuffled diffusion denoising<sup class="cite"><a href="#ref-12">[12]</a></sup> to memorisation time on colour images. | **Exploratory** (1 seed, RGB grouped per pixel, no CIFAR MLP null). | Confirms the ~2× slowdown on colour photos; ceiling at $$n=256$$ still open |
+| Phenomenon | Established theoretical &amp; empirical context | What we see in the interactive trajectories |
+|---|---|---|
+| **Over-parameterised CNNs still memorise scrambled pixels (~2× slower)** | Zhang et al.,<sup class="cite"><a href="#ref-8">[8]</a></sup> *Deep Image Prior*,<sup class="cite"><a href="#ref-9">[9]</a></sup> d'Ascoli et al.,<sup class="cite"><a href="#ref-10">[10]</a></sup> Wang &amp; Pehlevan<sup class="cite"><a href="#ref-11">[11]</a></sup> | On $$28\times 28$$ MNIST, natural and permuted U-Nets reach the same copying plateau (`~0.83`), with $$\tau_{\text{mem}}$$ delayed by $$\rho \approx 1.0\text{--}1.2$$ octaves while the MLP null stays at $$0$$. |
+| **Locality widens $$[\tau_{\text{gen}}, \tau_{\text{mem}}]$$ via $$\tau_{\text{gen}}$$, not by blocking $$\tau_{\text{mem}}$$** | Kadkhodaie et al.,<sup class="cite"><a href="#ref-12">[12]</a></sup> Bonnaire et al.,<sup class="cite"><a href="#ref-13">[13]</a></sup> Urfin et al.,<sup class="cite"><a href="#ref-25">[25]</a></sup> Wang, Finn &amp; Liu<sup class="cite"><a href="#ref-26">[26]</a></sup> | Scrambling pixels barely shifts $$\tau_{\text{mem}}$$, yet collapses fixed-patch LS denoisers ($$\Delta_{\text{LS}} \le -3$$) and nearly doubles the low-noise test–train denoising MSE gap. |
+| **Fixed-budget $$n^*$$ conflates speed with capacity ($$\Delta \approx -\rho/a$$)** | $$\tau_{\text{mem}} \propto n\,W^{-1}$$ in Bonnaire et al.,<sup class="cite"><a href="#ref-13">[13]</a></sup> Favero et al.,<sup class="cite"><a href="#ref-15">[15]</a></sup> Buchanan et al.<sup class="cite"><a href="#ref-27">[27]</a></sup> | A pure time multiplier $$2^\rho$$ creates a budget-dependent horizontal shift $$\Delta(B)$$ that shrinks as the $$\tau(n)$$ slope steepens, and reproduces `+1` octave per U-Net width doubling. |
+| **Where locality lives across architectures &amp; scales** | Kamb &amp; Ganguli,<sup class="cite"><a href="#ref-3">[3]</a></sup> BIRD,<sup class="cite"><a href="#ref-4">[4]</a></sup> Lukoianov et al.,<sup class="cite"><a href="#ref-5">[5]</a></sup> An et al.,<sup class="cite"><a href="#ref-20">[20]</a></sup> Tolstikhin et al.<sup class="cite"><a href="#ref-21">[21]</a></sup> | In a DiT, $$p=1$$ with learned positions is strictly permutation-equivariant while $$p > 1$$ reintroduces patch locality; in a $$28\times 28$$ U-Net, full-image bottleneck receptive fields mean permutation tests early-layer optimisation bias rather than a hard geometric ceiling. |
 
-### The physical boundary: small images vs. sub-image receptive fields
-
-At $$28\times 28$$ or $$32\times 32$$, our 3-level U-Net's bottleneck receptive field already spans the entire image. That means all of these experiments probe **early-layer local weight sharing and optimisation bias**, not a hard geometric bottleneck where a CNN literally cannot integrate distant pixels. On $$64\times 64$$ or $$256\times 256$$ images — or in a shallow CNN whose receptive field stays strictly smaller than the image — pixel permutation could still trigger a genuine asymptotic capacity drop rather than pure optimisation inertia.
-
-### The four sharpest follow-up experiments
-
-1. **Multi-seed width sweep on a matched $$n$$ grid:** 3 seeds each for `×½`, `×1`, and `×2` U-Nets evaluated on common $$n \in \{512, 1024\}$$ (plus dense early checkpoints for `×2`), turning Finding 1 from an exploratory clue into a firm result.
-2. **Multi-seed, lr-tuned DiT patch sweep:** 3 seeds and per-architecture learning-rate checks for `p=2` and `p=4` DiTs (plus a DiT noise floor) to nail down Finding 2 cleanly.
-3. **Zero-GPU spectral-bias theory check:** compute the eigenvalue spectrum of natural vs. permuted MNIST $$3\times 3$$ patch covariance matrices under Wang &amp; Pehlevan's<sup class="cite"><a href="#ref-11">[11]</a></sup> local-convolution dynamics and test whether $$\log_2(\lambda_{\text{nat}} / \lambda_{\text{perm}})$$ predicts $$\rho \approx 1$$ quantitatively.
-4. **A true receptive-field dial (and full 3,072-coord CIFAR permutation):** vary CNN depth without downsampling (receptive field 5, 9, 15 pixels on $$28\times 28$$) and scale training steps with $$n$$ ($$B \propto n$$) to test where optimisation inertia gives way to a real plateau shift.
-
-<details class="deep-dive">
-  <summary>Pre-registration &amp; protocol amendment log (Amendments 1–10)</summary>
-  <p>
-    All primary decision thresholds were pre-registered before running confirmatory replicates, with amendments logged whenever evaluation grids or controls needed adjustment:
-  </p>
-  <ul>
-    <li><strong>Amendment 1 &amp; 2 (post-hoc after <code>exp01</code> pilot):</strong> Added \(\tau_{\text{mem}}(n)\) and \(\rho(n)\) after noticing the natural vs. permuted speed gap on the first \(n=1024\) pilot pair; raised deciding budget from 30k to 100k because \(n^*\) was still drifting. Confirmatory only for runs launched after Amendment 2 (\(n=2048\) and all replicates).</li>
-    <li><strong>Amendment 3 (confirmatory MNIST replicates):</strong> Added <code>repA</code> &amp; <code>repB</code>, defined \(\sigma\), added 300k seed-0 predictions (<code>exp06</code>), and re-registered the MLP null from \(m=0.5\) to \(m=0.25\) (last downward crossing) because the MLP never reached \(0.5\) on the decreasing side.</li>
-    <li><strong>Amendment 4 &amp; 5 (FashionMNIST transfer &amp; follow-ups):</strong> Pre-registered FMNIST transfer failed the original MLP null by <code>0.01</code> (\(\vert\Delta\vert = 0.51\) at 70k due to coarse-grid straddling at \(n=128\)); Amendment 5 added \(n=96, 192\) (<code>exp11</code>, passes at \(\le 0.29\)) and extended \(n=2048\) to 300k (<code>exp10</code>, censored one-sided <code>INCONCLUSIVE</code>).</li>
-    <li><strong>Process deviations on FMNIST:</strong> <code>exp10</code> \(n=2048\) runs accidentally resumed from 70k instead of 100k checkpoints (recomputed 100k evals agree within <code>0.013</code>); two FMNIST 300k runs had <code>metrics.json</code> overwritten on relaunch and were reconstructed from stdout logs (raw distance files \(\ge\) 100k lost; verdicts unaffected).</li>
-    <li><strong>Amendment 6 (permutation-identity control):</strong> Pre-registered before <code>exp12</code>; <code>perm1</code> passed, <code>perm2</code> hit \(\rho(2048) = 0.99\) (<code>INCONCLUSIVE</code> by the letter).</li>
-    <li><strong>Amendment 7 &amp; 8 (width sweep &amp; CIFAR-10):</strong> Single-seed exploratory rules relaxed speed threshold from \(\rho \ge 1.0\) to consistent \(\rho > 0\) with mean \(\ge 0.5\). Amendment 8 extended CIFAR-10 \(n=128\text{--}512\) to 300k (<code>INCONCLUSIVE</code> on the ceiling test).</li>
-    <li><strong>Amendment 9 &amp; 10 (DiT locality dial):</strong> Initial <code>n = 256..4096</code> grid left DiT speed <code>UNDEFINED</code>; Amendment 10 added <code>n = 128</code> post hoc so \(\rho\) could be read at two points.</li>
-  </ul>
-</details>
+That final geometric point sets the natural boundary of everything plotted on this page. On $$28\times 28$$ and $$32\times 32$$ images, a 3-level U-Net's bottleneck receptive field spans the entire canvas — so an over-parameterised network has no trouble routing arbitrary long-range pixel permutations once given enough gradient steps. On high-resolution images where convolutional receptive fields remain strictly smaller than the scene (or when tracking the full two-clock Pareto frontier of sample quality $$\tau_{\text{gen}}$$ against memorisation $$\tau_{\text{mem}}$$), architectural locality can bind much more tightly than early-layer optimisation inertia alone.
 
 ---
 
@@ -247,7 +204,7 @@ At $$28\times 28$$ or $$32\times 32$$, our 3-level U-Net's bottleneck receptive 
   <li id="ref-10">d'Ascoli, S., Sagun, L., Bruna, J., &amp; Biroli, G. (2019). <em>Finding the Needle in the Haystack with Convolutions: On the Benefits of Architectural Bias.</em> NeurIPS 2019. <a href="https://arxiv.org/abs/1906.06766">arXiv:1906.06766</a></li>
   <li id="ref-11">Wang, B., &amp; Pehlevan, C. (2025). <em>An Analytical Theory of Spectral Bias in the Learning Dynamics of Diffusion Models.</em> <a href="https://arxiv.org/abs/2503.03206">arXiv:2503.03206</a></li>
   <li id="ref-12">Kadkhodaie, Z., Guth, F., Simoncelli, E. P., &amp; Mallat, S. (2023). <em>Generalization in Diffusion Models Arises from Geometry-Adaptive Harmonic Representations.</em> ICLR 2024. <a href="https://arxiv.org/abs/2310.02557">arXiv:2310.02557</a></li>
-  <li id="ref-13">Bonnaire, T., Urfin, R., Biroli, G., &amp; Mézard, M. (2025). <em>Why Diffusion Models Don't Memorize: The Role of Implicit Dynamical Regularization in Training.</em> <a href="https://arxiv.org/abs/2505.17638">arXiv:2505.17638</a></li>
+  <li id="ref-13">Bonnaire, T., Urfin, R., Biroli, G., &amp; Mézard, M. (2025). <em>Why Diffusion Models Don't Memorize: The Role of Implicit Dynamical Regularization in Training.</em> NeurIPS 2025 (Oral). <a href="https://arxiv.org/abs/2505.17638">arXiv:2505.17638</a></li>
   <li id="ref-14">Gu, X., Du, C., Pang, T., Li, C., Lin, M., &amp; Wang, Y. (2023). <em>On Memorization in Diffusion Models.</em> <a href="https://arxiv.org/abs/2310.02664">arXiv:2310.02664</a></li>
   <li id="ref-15">Favero, A., Sclocchi, A., &amp; Wyart, M. (2025). <em>Bigger Isn't Always Memorizing: Early Stopping Overparameterized Diffusion Models.</em> ICML 2025 Workshop. <a href="https://arxiv.org/abs/2505.16959">arXiv:2505.16959</a></li>
   <li id="ref-16">Marion, P., &amp; Wu, A. (2026). <em>Understanding Diffusion Models Requires Rethinking (Again) Generalization.</em> <a href="https://arxiv.org/abs/2605.06077">arXiv:2605.06077</a></li>
@@ -259,4 +216,7 @@ At $$28\times 28$$ or $$32\times 32$$, our 3-level U-Net's bottleneck receptive 
   <li id="ref-22">Arpit, D., et al. (2017). <em>A Closer Look at Memorization in Deep Networks.</em> ICML 2017. <a href="https://arxiv.org/abs/1706.05394">arXiv:1706.05394</a></li>
   <li id="ref-23">Ingrosso, A., &amp; Goldt, S. (2022). <em>Data-Driven Emergence of Convolutional Structure in Neural Networks.</em> PNAS 2022. <a href="https://arxiv.org/abs/2202.00565">arXiv:2202.00565</a></li>
   <li id="ref-24">Wang, Z., Wan, Z., Belkin, M., &amp; Wang, S. (2025). <em>Seeds of Structure: Patch PCA Reveals Universal Compositional Cues in Diffusion Models.</em> NeurIPS 2025. <a href="https://neurips.cc/virtual/2025/poster/119110">neurips.cc/virtual/2025/poster/119110</a></li>
+  <li id="ref-25">Urfin, R., Bonnaire, T., Biroli, G., &amp; Mézard, M. (2026). <em>First Learn, Then Memorize: The Spectral Bias of Diffusion Models.</em> <a href="https://arxiv.org/abs/2609.35377">arXiv:2609.35377</a></li>
+  <li id="ref-26">Wang, B., Finn, E. L. B., &amp; Liu, B. (2026). <em>The Two Clocks and the Innovation Window: When and How Generative Models Learn Rules.</em> <a href="https://arxiv.org/abs/2605.10019">arXiv:2605.10019</a></li>
+  <li id="ref-27">Buchanan, S., Pai, D., Ma, Y., &amp; De Bortoli, V. (2025). <em>On the Edge of Memorization in Diffusion Models.</em> <a href="https://arxiv.org/abs/2508.17689">arXiv:2508.17689</a></li>
 </ol>

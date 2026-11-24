@@ -268,7 +268,7 @@
       el("strong", { text: "~2\u00d7 slowdown (\u03c1 \u2248 1.0)" }),
       " projects onto a shrinking horizontal onset shift ",
       el("strong", { text: "\u0394 \u2248 \u2212\u03c1/a \u2192 \u22120.33" }),
-      " inside the pre-registered \u00b10.5 NO SHIFT band. Yet on Tab B, low-noise permuted test MSE at ",
+      " inside a \u00b10.5-octave band. Yet on Tab B, low-noise permuted test MSE at ",
       el("em", { text: "t = 50" }),
       " stays nearly ",
       el("strong", { text: "2\u00d7 worse (1.64 vs. 0.90 gap at 100k)" }),
@@ -330,11 +330,11 @@
         xLabel: "Training budget (steps, log scale)",
         yLabel: "\u0394(step) = log\u2082(n*_perm / n*_nat)",
         hBands: [
-          { y0: -0.5, y1: 0.5, fill: T.band, label: "Pre-registered NO SHIFT band" },
+          { y0: -0.5, y1: 0.5, fill: T.band, label: "\u00b10.5 octave band" },
         ],
         hLines: [
           { y: 0, color: T.axis, width: 1, dash: "none", opacity: 0.9 },
-          { y: -1.0, color: T.perm, width: 1.2, dash: "5,4", opacity: 0.85, label: "SHIFT threshold (\u0394 = \u22121.0)", align: "left" },
+          { y: -1.0, color: T.perm, width: 1.2, dash: "5,4", opacity: 0.85, label: "\u22121.0 octave (2\u00d7 shift)", align: "left" },
         ],
       });
 
@@ -953,10 +953,10 @@
     // ---- Header & Top Seg ----
     const header = el("div", { class: "viz-header" }, [
       el("div", null, [
-        el("h3", { class: "viz-title", text: "Exploratory Scale-Out: U-Net Width, Transformer Patch Size & CIFAR-10 at 300k" }),
+        el("h3", { class: "viz-title", text: "Exploratory Probes: U-Net Width, Transformer Patch Size & CIFAR-10 at 300k" }),
         el("p", {
           class: "viz-subtitle",
-          text: "Single-seed exploratory extensions beyond the main MNIST/FMNIST protocol \u2014 click an architecture or switch tabs to inspect curves and real CIFAR-10 outputs.",
+          text: "Single-seed exploratory sweeps across U-Net width, DiT patch size, and CIFAR-10 \u2014 click an architecture or switch tabs to inspect trajectories, caveats, and real CIFAR-10 outputs.",
         }),
       ]),
       el("span", { class: "viz-badge viz-badge--warn", text: "Single-seed exploratory" }),
@@ -1115,12 +1115,12 @@
     const tab2Wrap = el("div", { class: "viz-grid-2" }, [cifarLeftPanel, cifarRightPanel]);
 
     const figcaption = el("div", { class: "viz-figcaption" }, [
-      el("b", { text: "Exploratory summary: " }),
-      "Doubling U-Net width reproduces Bonnaire et al.\u2019s +1 octave/2\u00d7W capacity scaling while driving speed slowdown \u03c1 toward zero by \u00d72 (saturation); replacing 3\u00d73 convolutions with 2\u00d72 or 4\u00d74 transformer patches or 1\u00d71 pixel tokens dials \u03c1 smoothly from 0.93 down to 0.00. On CIFAR-10 at 300k, ",
+      el("b", { text: "Exploratory notes: " }),
+      "Doubling U-Net width reproduces Bonnaire et al.\u2019s +1 octave/2\u00d7W onset scaling while measured \u03c1 drops across these single-seed, non-overlapping n grids; varying DiT patch size from 1\u00d71 (exact symmetry) to 2\u00d72 and 4\u00d74 (shared U-Net schedule) illustrates how locality enters at the patchify boundary. On CIFAR-10 at 300k, ",
       el("em", { text: "n = 128" }),
-      " catches up (0.933, gap 0.067), whereas ",
+      " reaches 0.933 vs. 1.000, while ",
       el("em", { text: "n = 256" }),
-      " plateaus near 0.798 vs. 0.982 (gap 0.184).",
+      " sits at 0.798 vs. 0.982.",
     ]);
 
     clear(container);
@@ -1279,7 +1279,7 @@
           fill: T.muted,
           "font-family": T.sans,
           "font-size": 10.5,
-          text: "\u00b10.5 no-effect / NO SHIFT band",
+          text: "\u00b10.5 octave reference band",
         }));
 
         const rhoPts = widths.map((d) => [xScale(d.params_m), yScale(d.rho_mean)]);
@@ -1349,7 +1349,6 @@
             html += tipRow("Onset shift \u0394(100k)", fmtSigned(best.delta_100k, 3), T.nat);
             html += tipRow("n range for \u03c1", nRangeStr);
             if (rhoDetail) html += tipRow("Per-n \u03c1", rhoDetail);
-            html += tipRow("Verdicts", `${best.capacity} / ${best.speed}`);
             tooltip.show(e.clientX, e.clientY, html);
           },
           () => {
@@ -1690,7 +1689,6 @@
           html += tipRow("Mean slowdown \u03c1", arch.id === "D1_p1" ? "0.000 (exact)" : fmtNum(arch.rho_mean, 3), rColor);
           if (perN) html += tipRow("Per-n \u03c1", perN);
           html += tipRow("Onset shift \u0394(100k)", fmtSigned(arch.delta_100k, 3), dColor);
-          html += tipRow("Verdict", `${arch.capacity} / ${arch.speed}`);
           tooltip.show(e.clientX, e.clientY, html);
         };
         rowG.addEventListener("mouseenter", showTip);
@@ -1713,12 +1711,13 @@
       if (!arch) return;
       insetTitleLabel.textContent = arch.label;
 
-      // Update stats strip (avoid cross-arch n* comparisons; focus on within-arch params, delta, rho, verdict)
+      // Update stats strip (avoid cross-arch n* comparisons; focus on within-arch params, delta, rho, n grid)
+      const nGridStr = arch.id === "D1_p1" ? "all n" : Object.keys(arch.rho || {}).join(", ") || "\u2014";
       renderStatStrip(archStatStrip, [
         { label: "Params", value: `${arch.params_m}M` },
         { label: "\u0394(100k)", value: fmtSigned(arch.delta_100k, 2), color: T.nat },
-        { label: "Mean \u03c1", value: arch.id === "D1_p1" ? "0.00 (exact)" : fmtNum(arch.rho_mean, 2), color: arch.speed === "SPEED EFFECT" ? T.perm : T.muted },
-        { label: "Speed / Cap", value: arch.speed, color: arch.speed === "SPEED EFFECT" ? T.perm : T.nat },
+        { label: "Mean \u03c1", value: arch.id === "D1_p1" ? "0.00 (exact)" : fmtNum(arch.rho_mean, 2), color: arch.rho_mean > 0.3 ? T.perm : T.muted },
+        { label: "n grid for \u03c1", value: nGridStr, color: T.muted },
       ]);
 
       // Special case: DiT-p1 exact equivariance (no m_nat/m_perm curves needed; exact symmetry)

@@ -1219,7 +1219,7 @@
         }),
         el("p", {
           class: "viz-subtitle",
-          text: "Sixteen actual training images from our n = 128 subset (subset_seed = 0) spanning all 10 CIFAR-10 classes, shown before and after the fixed pixel permutation (perm_seed = 1234), followed by 300k-step U-Net outputs paired with their exact nearest training image.",
+          text: "Sixteen actual training images from the n = 128 subset (subset_seed = 0) spanning all 10 CIFAR-10 classes, shown before and after the fixed pixel permutation (perm_seed = 1234), followed by 300k-step U-Net outputs paired with their exact nearest training image.",
         }),
       ]),
       el("span", { class: "viz-badge", text: "CIFAR-10 · 32×32 RGB · subset_seed = 0" }),
