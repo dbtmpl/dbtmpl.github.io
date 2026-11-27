@@ -5,7 +5,7 @@ description: Personal writing by David Biertimpel.
 ---
 <section class="section section--first">
   <h1 class="page-title">Blog</h1>
-  <p class="section__lead">Things I write on my own: notes, experiments and ideas. Subscribe via <a href="{{ '/blog/feed.xml' | relative_url }}">RSS</a>.</p>
+  <p class="section__lead">Notes and experiments on things I'm curious about. Subscribe via <a href="{{ '/blog/feed.xml' | relative_url }}">RSS</a>.</p>
 
   {% if site.posts.size > 0 %}
     {% assign by_year = site.posts | group_by_exp: "p", "p.date | date: '%Y'" %}
@@ -13,26 +13,7 @@ description: Personal writing by David Biertimpel.
     <h2 class="postlist__year">{{ year.name }}</h2>
     <ul class="postlist">
       {% for post in year.items %}
-      {% if post.image %}
-      <li class="postlist__item postlist__item--card">
-        <a class="postlist__thumb" href="{{ post.url | relative_url }}" tabindex="-1" aria-hidden="true">
-          <img src="{{ post.image | relative_url }}?v={{ site.time | date: '%s' }}" alt="{{ post.title | escape }}" loading="lazy">
-        </a>
-        <div class="postlist__body">
-          <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %d, %Y' }}</time>
-          <a class="postlist__title" href="{{ post.url | relative_url }}">{{ post.title }}</a>
-          {% if post.description %}<p class="postlist__desc">{{ post.description }}</p>{% endif %}
-        </div>
-      </li>
-      {% else %}
-      <li class="postlist__item">
-        <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %d' }}</time>
-        <div>
-          <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-          {% if post.description %}<p class="postlist__desc">{{ post.description }}</p>{% endif %}
-        </div>
-      </li>
-      {% endif %}
+        {% include post_item.html post=post compact_date='%b %d' %}
       {% endfor %}
     </ul>
     {% endfor %}

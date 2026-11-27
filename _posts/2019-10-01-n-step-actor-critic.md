@@ -8,6 +8,7 @@ authors: >-
   <a href="https://github.com/victoriafoing">Vicky Foing</a> &amp; <a href="https://github.com/axlindt">Alex Lindt</a>
 affiliation: University of Amsterdam
 date: 2019-10-01
+image: /assets/rl_article/lunar_lander.gif
 code: https://github.com/axlindt/variance_n_step_actor_critic
 permalink: /rl_section.html
 math: true

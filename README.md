@@ -12,7 +12,7 @@ the workflow in `.github/workflows/pages.yml` on every push to `main`.
 | `blog/index.html` | Blog index (lists everything in `_posts/`) |
 | `_posts/` | Blog posts, named `YYYY-MM-DD-slug.md` |
 | `_drafts/` | Unpublished drafts (see `example-post.md` for math and code syntax) |
-| `n-step-actor-critic.md` | RL student-project article, served at `/rl_section.html` |
+| `_posts/2019-10-01-n-step-actor-critic.md` | RL student-project article, served at `/rl_section.html` |
 | `assets/js/squirrel.js` | The pixel-art squirrel next to the name |
 | `assets/css/style.css` | All styles; colors are CSS variables at the top (with a dark mode) |
 

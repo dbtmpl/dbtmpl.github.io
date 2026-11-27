@@ -77,10 +77,7 @@ squirrel: true
   {% if site.posts.size > 0 %}
   <ul class="postlist">
     {% for post in site.posts limit:3 %}
-    <li class="postlist__item">
-      <time datetime="{{ post.date | date_to_xmlschema }}">{{ post.date | date: '%b %Y' }}</time>
-      <a href="{{ post.url | relative_url }}">{{ post.title }}</a>
-    </li>
+      {% include post_item.html post=post compact_date='%b %Y' %}
     {% endfor %}
   </ul>
   <p><a href="{{ '/blog/' | relative_url }}">All posts &rarr;</a></p>

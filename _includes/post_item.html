@@ -1,0 +1,21 @@
+{%- assign p = include.post -%}
+{%- if p.image -%}
+<li class="postlist__item postlist__item--card">
+  <a class="postlist__thumb" href="{{ p.url | relative_url }}" tabindex="-1" aria-hidden="true">
+    <img src="{{ p.image | relative_url }}?v={{ site.time | date: '%s' }}" alt="{{ p.title | escape }}" loading="lazy">
+  </a>
+  <div class="postlist__body">
+    <time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: '%b %d, %Y' }}</time>
+    <a class="postlist__title" href="{{ p.url | relative_url }}">{{ p.title }}</a>
+    {% if p.description %}<p class="postlist__desc">{{ p.description }}</p>{% endif %}
+  </div>
+</li>
+{%- else -%}
+<li class="postlist__item">
+  <time datetime="{{ p.date | date_to_xmlschema }}">{{ p.date | date: include.compact_date | default: '%b %d, %Y' }}</time>
+  <div>
+    <a href="{{ p.url | relative_url }}">{{ p.title }}</a>
+    {% if p.description %}<p class="postlist__desc">{{ p.description }}</p>{% endif %}
+  </div>
+</li>
+{%- endif -%}
