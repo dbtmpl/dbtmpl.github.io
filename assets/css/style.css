@@ -162,6 +162,7 @@ strong { font-weight: 600; }
 .entry__title { font-size: 17px; line-height: 1.4; margin: 0 0 6px; font-weight: 600; }
 .entry__title a { color: var(--text); text-decoration: none; }
 .entry__title a:hover { color: var(--accent); }
+.entry__desc { margin: 0 0 6px; font-size: 14.5px; line-height: 1.5; color: var(--muted); }
 .entry__authors, .entry__aff, .entry__venue { margin: 0; font-size: 14.5px; }
 .entry__authors a { color: inherit; }
 .entry__authors sup { color: var(--muted); font-size: 0.7em; margin-left: 1px; }

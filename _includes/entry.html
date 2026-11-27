@@ -7,6 +7,7 @@
   {%- endif -%}
   <div class="entry__body">
     <h3 class="entry__title"><a href="{{ e.links[0].url | relative_url }}">{{ e.title }}</a></h3>
+    {%- if e.description -%}<p class="entry__desc">{{ e.description }}</p>{%- endif -%}
     <p class="entry__authors">
       {%- for a in e.authors -%}
         {%- if a.me -%}<strong>{{ a.name }}</strong>{%- elsif a.url -%}<a href="{{ a.url }}">{{ a.name }}</a>{%- else -%}{{ a.name }}{%- endif -%}

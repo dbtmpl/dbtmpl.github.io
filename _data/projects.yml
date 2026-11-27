@@ -1,5 +1,6 @@
 # Personal, course, and team projects (not the personal blog).
 - title: LLM Serving Explorer
+  description: Interactive browser simulation that animates how an LLM inference stack serves requests across routing, continuous batching, paged KV cache, memory tiers, and autoscaling.
   venue: Personal project, 2026
   authors:
     - { name: David Biertimpel, me: true }
