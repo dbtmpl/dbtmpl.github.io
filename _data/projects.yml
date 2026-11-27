@@ -10,6 +10,7 @@
     - { label: Code, url: "https://github.com/dbtmpl/llm-serving-explorer" }
 
 - title: Towards Neural Ranking for Mixed-Initiative Conversational Search
+  description: Extends ConvKNRM, PACRR, and BERT document rankers to incorporate clarifying questions and user answers on the Qulac conversational search dataset, and analyzes ranking performance across answer polarities.
   venue: University of Amsterdam, 2020
   authors:
     - { name: Hinrik Snær Guðmundsson, url: "https://www.linkedin.com/in/hinrik-sn%C3%A6r-gu%C3%B0mundsson-105b09148/" }
@@ -20,6 +21,7 @@
     - { label: Code, url: "https://github.com/dbtmpl/Information-Retrieval-2" }
 
 - title: Exploring Variance in N-Step Actor-Critic Methods
+  description: Studies the bias-variance trade-off in actor-critic reinforcement learning by comparing n-step bootstrapping returns from one-step TD to Monte Carlo across OpenAI Gym environments.
   venue: University of Amsterdam, 2019
   authors:
     - { name: David Biertimpel, me: true }
@@ -32,6 +34,7 @@
     - { label: Code, url: "https://github.com/axlindt/variance_n_step_actor_critic" }
 
 - title: HandsOnVR
+  description: Pairs a Leap Motion sensor with an HTC Vive controller via a 3D-printed mount and a networked Unity environment for unrestricted, controller-free hand tracking in multi-user VR.
   venue: University of Hamburg, 2018
   authors:
     - { name: Lukas Bittner }
