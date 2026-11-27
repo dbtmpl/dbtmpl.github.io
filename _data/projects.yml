@@ -1,4 +1,13 @@
-# Student and course projects (not the personal blog).
+# Personal, course, and team projects (not the personal blog).
+- title: LLM Serving Explorer
+  venue: Personal project, 2026
+  authors:
+    - { name: David Biertimpel, me: true }
+  image: /assets/llm_serving_explorer/demo.webp
+  links:
+    - { label: Website, url: "https://dbtmpl.github.io/llm-serving-explorer/" }
+    - { label: Code, url: "https://github.com/dbtmpl/llm-serving-explorer" }
+
 - title: Towards Neural Ranking for Mixed-Initiative Conversational Search
   venue: University of Amsterdam, 2020
   authors:
